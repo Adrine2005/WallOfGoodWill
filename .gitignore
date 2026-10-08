@@ -13,6 +13,7 @@ Thumbs.db
 *.key
 serviceAccountKey*.json
 *service-account*.json
+google-services.json
 
 # Go
 server/bin/

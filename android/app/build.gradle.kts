@@ -47,6 +47,7 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging)
     implementation(libs.play.services.code.scanner)
+    implementation(libs.glide)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)

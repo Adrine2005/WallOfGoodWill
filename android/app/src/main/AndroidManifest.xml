@@ -43,6 +43,16 @@
             android:name=".MainActivity"
             android:exported="false" />
 
+        <!-- Listings Screens -->
+        <activity
+            android:name=".ui.listings.CreateListingActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <activity
+            android:name=".ui.listings.ListingDetailActivity"
+            android:exported="false" />
+
     </application>
 
 </manifest>

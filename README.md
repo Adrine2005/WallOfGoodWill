@@ -87,7 +87,58 @@ curl -X POST http://localhost:8080/v1/auth/verify-qr \
 # Response: {"verified": true, "message": "campus verification successful", ...}
 ```
 
-### 3. Building the Android Application
+### 3. Campus Listings & Marketplace API
+
+The marketplace supports both **Donations** (100% free) and **Sales** with multi-parameter filtering:
+
+#### Endpoints:
+- **`GET /v1/listings`**: Retrieve active listings with optional query filters:
+  - `?category=BOOKS` (Options: `BOOKS`, `ELECTRONICS`, `CYCLES`, `KITCHENWARE`, `FURNITURE`, `FASHION`, `STATIONERY`, `OTHER`)
+  - `?type=DONATE` or `?type=SELL`
+  - `?hostelBlock=Hostel Block A (Boys)`
+  - `?search=kettle`
+- **`POST /v1/listings`** *(Authenticated)*: Create a new listing.
+  - For `DONATE`, `price` is automatically 0.
+  - For `SELL`, `price` must be greater than 0.
+- **`GET /v1/listings/{id}`**: Get single listing details.
+- **`GET /v1/listings/my`** *(Authenticated)*: Get all listings created by the logged-in student.
+- **`DELETE /v1/listings/{id}`** *(Authenticated)*: Delete or close a listing (restricted to seller).
+
+#### Testing Listings with `curl`:
+```bash
+# 1. Fetch public feed
+curl http://localhost:8080/v1/listings
+
+# 2. Filter by category
+curl "http://localhost:8080/v1/listings?category=BOOKS"
+
+# 3. Post a donation item (free)
+curl -X POST http://localhost:8080/v1/listings \
+  -H "Authorization: Bearer mock-token-student-101" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Data Structures & Algorithms Book",
+    "description": "Donating to juniors after final semester",
+    "category": "BOOKS",
+    "type": "DONATE",
+    "condition": "GOOD"
+  }'
+
+# 4. Post a sale item
+curl -X POST http://localhost:8080/v1/listings \
+  -H "Authorization: Bearer mock-token-student-101" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Study Table Lamp",
+    "description": "Warm light, 3 brightness levels",
+    "category": "ELECTRONICS",
+    "type": "SELL",
+    "price": 250,
+    "condition": "LIKE_NEW"
+  }'
+```
+
+### 4. Building the Android Application
 
 #### Android Architecture:
 - **`SplashActivity`**: Session check router routing unauthenticated users to `LoginActivity`, unverified students to `VerifyQrActivity`, and verified students directly to `MainActivity`.

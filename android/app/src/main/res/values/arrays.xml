@@ -9,4 +9,22 @@
         <item>Faculty &amp; Staff Residences</item>
         <item>Day Scholar / Off-Campus</item>
     </string-array>
+
+    <string-array name="item_categories">
+        <item>Books</item>
+        <item>Electronics</item>
+        <item>Cycles</item>
+        <item>Kitchenware</item>
+        <item>Furniture</item>
+        <item>Fashion</item>
+        <item>Stationery</item>
+        <item>Other</item>
+    </string-array>
+
+    <string-array name="item_conditions">
+        <item>Like New</item>
+        <item>New</item>
+        <item>Good</item>
+        <item>Fair</item>
+    </string-array>
 </resources>

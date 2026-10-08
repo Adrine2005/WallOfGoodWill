@@ -12,10 +12,11 @@ import (
 	"goodwill-server/internal/config"
 	"goodwill-server/internal/handlers"
 	"goodwill-server/internal/invites"
+	"goodwill-server/internal/listings"
 	"goodwill-server/internal/users"
 )
 
-func SetupRouter(userService *users.Service, inviteService *invites.Service, verifier auth.TokenVerifier) *chi.Mux {
+func SetupRouter(userService *users.Service, inviteService *invites.Service, listingsService *listings.Service, verifier auth.TokenVerifier) *chi.Mux {
 	r := chi.NewRouter()
 
 	r.Use(middleware.RequestID)
@@ -27,6 +28,7 @@ func SetupRouter(userService *users.Service, inviteService *invites.Service, ver
 
 	authHandler := handlers.NewAuthHandler(userService, inviteService, verifier)
 	adminHandler := handlers.NewAdminHandler(inviteService)
+	listingsHandler := handlers.NewListingsHandler(listingsService, userService)
 
 	r.Route("/v1/auth", func(r chi.Router) {
 		r.Post("/register", authHandler.Register)
@@ -43,6 +45,18 @@ func SetupRouter(userService *users.Service, inviteService *invites.Service, ver
 		r.Get("/qr/list", adminHandler.ListQR)
 	})
 
+	r.Route("/v1/listings", func(r chi.Router) {
+		r.Get("/", listingsHandler.ListListings)
+		r.Get("/{id}", listingsHandler.GetListing)
+
+		r.Group(func(r chi.Router) {
+			r.Use(auth.Middleware(verifier))
+			r.Post("/", listingsHandler.CreateListing)
+			r.Get("/my", listingsHandler.GetMyListings)
+			r.Delete("/{id}", listingsHandler.DeleteListing)
+		})
+	})
+
 	return r
 }
 
@@ -51,9 +65,10 @@ func main() {
 
 	userService := users.NewService()
 	inviteService := invites.NewService()
+	listingsService := listings.NewService()
 	verifier := auth.NewMockVerifier()
 
-	r := SetupRouter(userService, inviteService, verifier)
+	r := SetupRouter(userService, inviteService, listingsService, verifier)
 
 	addr := fmt.Sprintf(":%s", cfg.Port)
 	log.Printf("Wall of Goodwill server starting on port %s in %s mode\n", cfg.Port, cfg.Env)
