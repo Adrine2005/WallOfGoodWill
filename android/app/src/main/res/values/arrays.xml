@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="hostel_blocks">
+        <item>Hostel Block A (Boys)</item>
+        <item>Hostel Block B (Boys)</item>
+        <item>Hostel Block C (Girls)</item>
+        <item>Hostel Block D (Girls)</item>
+        <item>Hostel Block E (PG / Research)</item>
+        <item>Faculty &amp; Staff Residences</item>
+        <item>Day Scholar / Off-Campus</item>
+    </string-array>
+</resources>

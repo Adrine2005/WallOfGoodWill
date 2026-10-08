@@ -2,4 +2,36 @@
     <string name="app_name">Wall of Goodwill</string>
     <string name="welcome_title">Wall of Goodwill</string>
     <string name="welcome_subtitle">Campus-Only Marketplace &amp; Donation Network</string>
+
+    <!-- Splash Screen -->
+    <string name="splash_tagline">Connecting Campus Communities</string>
+
+    <!-- Login Screen -->
+    <string name="login_title">Welcome Back</string>
+    <string name="login_subtitle">Sign in with your campus credentials</string>
+    <string name="email_hint">Email Address</string>
+    <string name="password_hint">Password</string>
+    <string name="btn_login">Sign In</string>
+    <string name="no_account_prompt">Don\'t have an account? Sign up</string>
+
+    <!-- Register Screen -->
+    <string name="register_title">Join Wall of Goodwill</string>
+    <string name="register_subtitle">Create your student campus profile</string>
+    <string name="name_hint">Full Name</string>
+    <string name="hostel_block_hint">Select Hostel Block</string>
+    <string name="room_no_hint">Room Number (e.g. 302)</string>
+    <string name="phone_hint">Phone Number (Optional)</string>
+    <string name="instant_qr_hint">Hostel QR Invite Code (Optional)</string>
+    <string name="btn_register">Create Account</string>
+    <string name="have_account_prompt">Already have an account? Sign in</string>
+
+    <!-- Verification Gateway -->
+    <string name="verify_title">Campus Verification</string>
+    <string name="verify_subtitle">To ensure a trusted, safe campus environment, scan the QR code posted on your hostel notice board to verify your physical presence.</string>
+    <string name="btn_scan_qr">Scan Hostel Notice Board QR</string>
+    <string name="or_manual_entry">Or enter the code manually</string>
+    <string name="manual_code_hint">Invite Code (e.g. GW-A9B4C2)</string>
+    <string name="btn_verify_code">Verify Code</string>
+    <string name="btn_logout">Log Out</string>
+    <string name="verified_success">Campus access granted! Welcome aboard.</string>
 </resources>

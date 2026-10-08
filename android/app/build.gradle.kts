@@ -42,6 +42,11 @@ dependencies {
     implementation(libs.lifecycle.livedata)
     implementation(libs.navigation.fragment)
     implementation(libs.navigation.ui)
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.converter.gson)
+    implementation(libs.okhttp)
+    implementation(libs.okhttp.logging)
+    implementation(libs.play.services.code.scanner)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)

@@ -54,7 +54,47 @@ curl http://localhost:8080/health
 # Response: {"status":"ok","timestamp":"...","service":"wall-of-goodwill-api"}
 ```
 
-### 2. Building the Android Application
+### 2. Authentication & Campus Verification API
+
+The backend features a pluggable authentication token verification system with time-limited QR invitation codes posted on physical hostel notice boards to verify campus presence:
+
+#### Endpoints:
+- **`POST /v1/auth/register`**: Register student profile with name, email, hostel block, room number, and optional instant QR invite code.
+- **`POST /v1/auth/verify-qr`** *(Authenticated)*: Validates unexpired QR code and grants campus verified status.
+- **`GET /v1/auth/me`** *(Authenticated)*: Fetches current student profile and verification status.
+- **`POST /v1/admin/qr/generate`**: Admin generates time-limited QR code (e.g., 24h duration with usage count limits).
+- **`GET /v1/admin/qr/list`**: List active QR codes and usage counters.
+
+#### Testing the Verification Lifecycle with `curl`:
+```bash
+# 1. Admin generates a notice board QR code
+curl -X POST http://localhost:8080/v1/admin/qr/generate \
+  -H "Content-Type: application/json" \
+  -d '{"label": "Hostel Block A Notice Board", "durationSeconds": 86400, "maxUses": 100}'
+# Example Response: {"code":"GW-8F2A1C", ...}
+
+# 2. Student registers (without instant code -> unverified status)
+curl -X POST http://localhost:8080/v1/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"uid": "student-101", "name": "Adrine Solomon", "email": "adrine@campus.edu", "hostelBlock": "Hostel Block A (Boys)", "roomNo": "302"}'
+# Response: {"verified": false, "message": "user registered successfully", ...}
+
+# 3. Student scans QR poster at the notice board
+curl -X POST http://localhost:8080/v1/auth/verify-qr \
+  -H "Authorization: Bearer mock-token-student-101" \
+  -H "Content-Type: application/json" \
+  -d '{"code": "GW-8F2A1C"}'
+# Response: {"verified": true, "message": "campus verification successful", ...}
+```
+
+### 3. Building the Android Application
+
+#### Android Architecture:
+- **`SplashActivity`**: Session check router routing unauthenticated users to `LoginActivity`, unverified students to `VerifyQrActivity`, and verified students directly to `MainActivity`.
+- **`LoginActivity`**: Email & password authentication with input validation.
+- **`RegisterActivity`**: Form with student details, hostel block selection dropdown, and optional instant QR code entry.
+- **`VerifyQrActivity`**: Campus verification gateway with Google Code Scanner button and manual alphanumeric code entry fallback.
+- **`AuthRepository` & `SessionManager`**: MVVM repository caching auth tokens and profile in SharedPreferences with Retrofit OkHttp `AuthInterceptor`.
 
 #### Option A: Command Line
 ```bash
