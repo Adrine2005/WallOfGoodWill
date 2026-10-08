@@ -162,3 +162,46 @@ func (h *ListingsHandler) DeleteListing(w http.ResponseWriter, r *http.Request) 
 
 	writeJSON(w, http.StatusOK, map[string]string{"message": "listing deleted successfully"})
 }
+
+type UpdateStatusRequest struct {
+	Status listings.ListingStatus `json:"status"`
+}
+
+func (h *ListingsHandler) UpdateListingStatus(w http.ResponseWriter, r *http.Request) {
+	claims, ok := auth.GetUserClaims(r.Context())
+	if !ok || claims.UID == "" {
+		writeError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	id := chi.URLParam(r, "id")
+	var req UpdateStatusRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	status := listings.ListingStatus(strings.ToUpper(strings.TrimSpace(string(req.Status))))
+	if status != listings.StatusActive && status != listings.StatusSold && status != listings.StatusDonated && status != listings.StatusDeleted {
+		writeError(w, http.StatusBadRequest, "invalid status value")
+		return
+	}
+
+	err := h.listings.UpdateStatus(id, claims.UID, status)
+	if err != nil {
+		switch {
+		case errors.Is(err, listings.ErrListingNotFound):
+			writeError(w, http.StatusNotFound, "listing not found")
+		case errors.Is(err, listings.ErrUnauthorized):
+			writeError(w, http.StatusForbidden, "unauthorized: only the seller can update status")
+		default:
+			writeError(w, http.StatusBadRequest, err.Error())
+		}
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]string{
+		"message": "status updated successfully",
+		"status":  string(status),
+	})
+}

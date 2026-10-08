@@ -19,6 +19,7 @@ import com.goodwill.app.ui.listings.CreateListingActivity;
 import com.goodwill.app.ui.listings.ListingDetailActivity;
 import com.goodwill.app.ui.listings.ListingsAdapter;
 import com.goodwill.app.ui.listings.ListingsViewModel;
+import com.goodwill.app.ui.profile.ProfileActivity;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -39,6 +40,7 @@ public class MainActivity extends AppCompatActivity {
         setupFilterChips();
         setupSearch();
         setupFab();
+        setupProfileButton();
         setupObservers();
     }
 
@@ -150,6 +152,12 @@ public class MainActivity extends AppCompatActivity {
     private void setupFab() {
         binding.fabPostListing.setOnClickListener(v -> {
             startActivity(new Intent(MainActivity.this, CreateListingActivity.class));
+        });
+    }
+
+    private void setupProfileButton() {
+        binding.btnProfile.setOnClickListener(v -> {
+            startActivity(new Intent(MainActivity.this, ProfileActivity.class));
         });
     }
 }

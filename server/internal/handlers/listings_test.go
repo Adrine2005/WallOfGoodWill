@@ -42,6 +42,7 @@ func setupListingsEnv() (http.Handler, *listings.Service, *users.Service, *auth.
 			r.Use(auth.Middleware(verifier))
 			r.Post("/", listingsHandler.CreateListing)
 			r.Get("/my", listingsHandler.GetMyListings)
+			r.Put("/{id}/status", listingsHandler.UpdateListingStatus)
 			r.Delete("/{id}", listingsHandler.DeleteListing)
 		})
 	})
@@ -209,3 +210,89 @@ func TestDeleteListing_Permissions(t *testing.T) {
 		t.Errorf("expected 200 OK for owner delete, got %d", recAuth.Code)
 	}
 }
+
+func TestUpdateListingStatus(t *testing.T) {
+	router, listingsService, _, _ := setupListingsEnv()
+
+	item, err := listingsService.CreateListing(
+		"student-seller-1",
+		"Sid",
+		"Block A",
+		"204",
+		"Electric Kettle",
+		"1.5L kettle in good condition",
+		listings.CategoryKitchenware,
+		listings.TypeSell,
+		350,
+		listings.ConditionGood,
+		nil,
+	)
+	if err != nil {
+		t.Fatalf("failed to create listing: %v", err)
+	}
+
+	// 1. Unauthorized attempt (different student)
+	bodyOther, _ := json.Marshal(map[string]string{"status": "SOLD"})
+	reqOther := httptest.NewRequest(http.MethodPut, "/v1/listings/"+item.ID+"/status", bytes.NewReader(bodyOther))
+	reqOther.Header.Set("Authorization", "Bearer mock-token-student-other")
+	recOther := httptest.NewRecorder()
+	router.ServeHTTP(recOther, reqOther)
+	if recOther.Code != http.StatusForbidden {
+		t.Errorf("expected 403 Forbidden for non-owner update, got %d", recOther.Code)
+	}
+
+	// 2. Invalid status value
+	bodyInvalid, _ := json.Marshal(map[string]string{"status": "UNKNOWN_STATUS"})
+	reqInvalid := httptest.NewRequest(http.MethodPut, "/v1/listings/"+item.ID+"/status", bytes.NewReader(bodyInvalid))
+	reqInvalid.Header.Set("Authorization", "Bearer mock-token-student-seller-1")
+	recInvalid := httptest.NewRecorder()
+	router.ServeHTTP(recInvalid, reqInvalid)
+	if recInvalid.Code != http.StatusBadRequest {
+		t.Errorf("expected 400 Bad Request for invalid status, got %d", recInvalid.Code)
+	}
+
+	// 3. Not found listing
+	bodyNotFound, _ := json.Marshal(map[string]string{"status": "SOLD"})
+	reqNotFound := httptest.NewRequest(http.MethodPut, "/v1/listings/non-existent-id/status", bytes.NewReader(bodyNotFound))
+	reqNotFound.Header.Set("Authorization", "Bearer mock-token-student-seller-1")
+	recNotFound := httptest.NewRecorder()
+	router.ServeHTTP(recNotFound, reqNotFound)
+	if recNotFound.Code != http.StatusNotFound {
+		t.Errorf("expected 404 Not Found, got %d", recNotFound.Code)
+	}
+
+	// 4. Authorized status update to SOLD
+	bodySold, _ := json.Marshal(map[string]string{"status": "SOLD"})
+	reqSold := httptest.NewRequest(http.MethodPut, "/v1/listings/"+item.ID+"/status", bytes.NewReader(bodySold))
+	reqSold.Header.Set("Authorization", "Bearer mock-token-student-seller-1")
+	recSold := httptest.NewRecorder()
+	router.ServeHTTP(recSold, reqSold)
+	if recSold.Code != http.StatusOK {
+		t.Fatalf("expected 200 OK for owner update to SOLD, got %d: %s", recSold.Code, recSold.Body.String())
+	}
+
+	// Verify listing is now SOLD in service
+	updatedItem, err := listingsService.GetListing(item.ID)
+	if err != nil {
+		t.Fatalf("failed to get listing: %v", err)
+	}
+	if updatedItem.Status != listings.StatusSold {
+		t.Errorf("expected status %s, got %s", listings.StatusSold, updatedItem.Status)
+	}
+
+	// 5. Authorized status update to DONATED
+	bodyDonated, _ := json.Marshal(map[string]string{"status": "DONATED"})
+	reqDonated := httptest.NewRequest(http.MethodPut, "/v1/listings/"+item.ID+"/status", bytes.NewReader(bodyDonated))
+	reqDonated.Header.Set("Authorization", "Bearer mock-token-student-seller-1")
+	recDonated := httptest.NewRecorder()
+	router.ServeHTTP(recDonated, reqDonated)
+	if recDonated.Code != http.StatusOK {
+		t.Fatalf("expected 200 OK for owner update to DONATED, got %d: %s", recDonated.Code, recDonated.Body.String())
+	}
+
+	updatedItem2, _ := listingsService.GetListing(item.ID)
+	if updatedItem2.Status != listings.StatusDonated {
+		t.Errorf("expected status %s, got %s", listings.StatusDonated, updatedItem2.Status)
+	}
+}
+

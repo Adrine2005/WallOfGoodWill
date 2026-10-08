@@ -53,6 +53,11 @@
             android:name=".ui.listings.ListingDetailActivity"
             android:exported="false" />
 
+        <!-- Profile & My Listings Screen -->
+        <activity
+            android:name=".ui.profile.ProfileActivity"
+            android:exported="false" />
+
     </application>
 
 </manifest>
