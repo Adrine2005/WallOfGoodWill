@@ -1,0 +1,41 @@
+# AI Agent Skills & Workflows
+.agents/
+.gemini/
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+
+# Secrets, Credentials & Environment
+.env
+.env.*
+*.pem
+*.key
+serviceAccountKey*.json
+*service-account*.json
+
+# Go
+server/bin/
+bin/
+*.exe
+*.test
+*.out
+
+# Android & Gradle
+.gradle/
+build/
+*/build/
+app/build/
+*.apk
+*.aab
+local.properties
+.cxx/
+captures/
+*.hprof
+
+# IDEs & Editors
+.idea/
+*.iml
+.vscode/
+*.swp
+*~
