@@ -208,6 +208,110 @@
 
                 </com.google.android.material.card.MaterialCardView>
 
+                <!-- Goodwill Karma Points & Badges Card -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cardKarmaPoints"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginEnd="16dp"
+                    android:layout_marginBottom="16dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="2dp"
+                    app:cardBackgroundColor="@color/surface"
+                    app:strokeColor="@color/outline"
+                    app:strokeWidth="1dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="20dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <TextView
+                                android:id="@+id/tvProfileBadgeIcon"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textSize="26sp"
+                                android:text="🌱" />
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:layout_marginStart="12dp"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:id="@+id/tvProfileTierName"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:textSize="16sp"
+                                    android:textStyle="bold"
+                                    android:textColor="@color/text_primary"
+                                    android:text="Newcomer Donor" />
+
+                                <TextView
+                                    android:id="@+id/tvProfileDonationsCount"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:textSize="12sp"
+                                    android:textColor="@color/text_secondary"
+                                    android:text="0 donations completed" />
+
+                            </LinearLayout>
+
+                            <TextView
+                                android:id="@+id/tvProfileKarmaScore"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textSize="20sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/primary"
+                                android:text="0 pts" />
+
+                        </LinearLayout>
+
+                        <!-- Progress Bar to Next Tier -->
+                        <com.google.android.material.progressindicator.LinearProgressIndicator
+                            android:id="@+id/progressTierNext"
+                            android:layout_width="match_parent"
+                            android:layout_height="8dp"
+                            android:layout_marginTop="14dp"
+                            app:indicatorColor="@color/primary"
+                            app:trackColor="@color/surface_variant"
+                            app:trackCornerRadius="4dp" />
+
+                        <TextView
+                            android:id="@+id/tvNextTierHint"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:textSize="11sp"
+                            android:textColor="@color/text_secondary"
+                            android:text="Donate items to reach Donor Pioneer (50 pts)" />
+
+                        <!-- Leaderboard Button -->
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnViewLeaderboard"
+                            style="@style/Widget.Material3.Button.TonalButton"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="14dp"
+                            android:text="🏆 View Campus Leaderboard"
+                            android:textColor="@color/primary"
+                            app:cornerRadius="10dp" />
+
+                    </LinearLayout>
+
+                </com.google.android.material.card.MaterialCardView>
+
                 <!-- My Listings Section Header -->
                 <LinearLayout
                     android:layout_width="match_parent"

@@ -84,6 +84,11 @@
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
 
+        <!-- Goodwill Points & Campus Leaderboard Screen -->
+        <activity
+            android:name=".ui.points.LeaderboardActivity"
+            android:exported="false" />
+
     </application>
 
 </manifest>

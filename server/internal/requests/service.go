@@ -12,6 +12,7 @@ import (
 
 	"goodwill-server/internal/listings"
 	"goodwill-server/internal/notifications"
+	"goodwill-server/internal/points"
 	"goodwill-server/internal/users"
 )
 
@@ -56,6 +57,7 @@ type Service struct {
 	listingsService      *listings.Service
 	usersService         *users.Service
 	notificationsService *notifications.Service
+	pointsService        *points.Service
 }
 
 func NewService(listingsService *listings.Service, usersService *users.Service, notifService *notifications.Service) *Service {
@@ -65,6 +67,12 @@ func NewService(listingsService *listings.Service, usersService *users.Service, 
 		usersService:         usersService,
 		notificationsService: notifService,
 	}
+}
+
+func (s *Service) SetPointsService(p *points.Service) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.pointsService = p
 }
 
 func generateID() string {
@@ -240,6 +248,10 @@ func (s *Service) AcceptRequest(requestID string, donorID string) (*DonationRequ
 			notifications.TypeRequestAccepted,
 			target.ID,
 		)
+	}
+
+	if s.pointsService != nil {
+		s.pointsService.AwardDonationPoints(donorID)
 	}
 
 	return target, nil

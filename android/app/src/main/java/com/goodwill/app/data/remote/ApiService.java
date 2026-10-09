@@ -17,6 +17,8 @@ import com.goodwill.app.data.remote.dto.UnreadCountDto;
 import com.goodwill.app.data.remote.dto.UpdateStatusRequest;
 import com.goodwill.app.data.remote.dto.UserDto;
 import com.goodwill.app.data.remote.dto.VerifyQrRequest;
+import com.goodwill.app.data.remote.dto.LeaderboardEntryDto;
+import com.goodwill.app.data.remote.dto.UserPointsDto;
 import com.goodwill.app.data.remote.dto.WishlistItemDto;
 
 import java.util.List;
@@ -147,4 +149,11 @@ public interface ApiService {
 
     @DELETE("v1/wishlist/{id}")
     Call<Map<String, String>> deleteWishlistItem(@Path("id") String id);
+
+    // Goodwill Points & Badges endpoints
+    @GET("v1/points/me")
+    Call<UserPointsDto> getMyPoints();
+
+    @GET("v1/points/leaderboard")
+    Call<List<LeaderboardEntryDto>> getLeaderboard();
 }

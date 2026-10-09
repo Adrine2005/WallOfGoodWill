@@ -15,6 +15,8 @@ import com.goodwill.app.ui.auth.LoginActivity;
 import com.goodwill.app.ui.chat.ConversationsActivity;
 import com.goodwill.app.ui.listings.CreateListingActivity;
 import com.goodwill.app.ui.listings.ListingDetailActivity;
+import com.goodwill.app.ui.points.LeaderboardActivity;
+import com.goodwill.app.ui.points.PointsViewModel;
 import com.goodwill.app.ui.requests.DonationRequestsActivity;
 import com.goodwill.app.ui.wishlist.WishlistActivity;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -24,6 +26,7 @@ public class ProfileActivity extends AppCompatActivity {
 
     private ActivityProfileBinding binding;
     private ProfileViewModel viewModel;
+    private PointsViewModel pointsViewModel;
     private MyListingsAdapter adapter;
 
     @Override
@@ -33,6 +36,7 @@ public class ProfileActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
 
         viewModel = new ViewModelProvider(this).get(ProfileViewModel.class);
+        pointsViewModel = new ViewModelProvider(this).get(PointsViewModel.class);
 
         setupToolbar();
         setupRecyclerView();
@@ -45,6 +49,7 @@ public class ProfileActivity extends AppCompatActivity {
         super.onResume();
         viewModel.loadProfile();
         viewModel.loadMyListings();
+        pointsViewModel.loadMyPoints();
     }
 
     private void setupToolbar() {
@@ -120,6 +125,11 @@ public class ProfileActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
+        binding.btnViewLeaderboard.setOnClickListener(v -> {
+            Intent intent = new Intent(ProfileActivity.this, LeaderboardActivity.class);
+            startActivity(intent);
+        });
+
         binding.btnCreateFirstListing.setOnClickListener(v -> {
             Intent intent = new Intent(ProfileActivity.this, CreateListingActivity.class);
             startActivity(intent);
@@ -178,6 +188,31 @@ public class ProfileActivity extends AppCompatActivity {
             if (error != null && !error.isEmpty()) {
                 Snackbar.make(binding.getRoot(), error, Snackbar.LENGTH_LONG).show();
                 viewModel.clearMessages();
+            }
+        });
+
+        pointsViewModel.getUserPoints().observe(this, points -> {
+            if (points != null) {
+                binding.tvProfileKarmaScore.setText(points.getPoints() + " pts");
+                binding.tvProfileTierName.setText(points.getTierName() != null ? points.getTierName() : "Newcomer Donor");
+                int donations = points.getDonationCount();
+                binding.tvProfileDonationsCount.setText(donations + (donations == 1 ? " donation completed" : " donations completed"));
+
+                String icon = "🌱";
+                if (points.getBadges() != null && !points.getBadges().isEmpty()) {
+                    icon = points.getBadges().get(points.getBadges().size() - 1).getIcon();
+                }
+                binding.tvProfileBadgeIcon.setText(icon);
+
+                binding.progressTierNext.setProgress(points.getProgressPercent());
+
+                if (points.getPoints() >= 250 || points.getDonationCount() >= 5) {
+                    binding.tvNextTierHint.setText("Max tier achieved! Outstanding contribution to zero campus waste 🌟");
+                } else {
+                    int remaining = points.getNextTierPoints() - points.getPoints();
+                    if (remaining < 0) remaining = 0;
+                    binding.tvNextTierHint.setText(String.format("%d pts to next badge & tier milestone", remaining));
+                }
             }
         });
     }
