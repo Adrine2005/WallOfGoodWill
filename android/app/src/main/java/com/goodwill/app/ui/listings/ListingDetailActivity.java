@@ -128,16 +128,17 @@ public class ListingDetailActivity extends AppCompatActivity {
                 item.getRoomNo() != null ? item.getRoomNo() : "N/A");
         binding.tvDetailSellerHostel.setText(hostelLocation);
 
-        // Photo loading
+        // Photo loading with category fallback
+        int placeholderRes = CategoryPlaceholderHelper.getPlaceholderForCategory(item.getCategory());
         if (item.getPhotos() != null && !item.getPhotos().isEmpty() && item.getPhotos().get(0) != null) {
             Glide.with(this)
                     .load(item.getPhotos().get(0))
                     .centerCrop()
-                    .placeholder(R.color.surface_variant)
-                    .error(R.color.surface_variant)
+                    .placeholder(placeholderRes)
+                    .error(placeholderRes)
                     .into(binding.ivDetailPhoto);
         } else {
-            binding.ivDetailPhoto.setImageResource(android.R.drawable.ic_menu_gallery);
+            binding.ivDetailPhoto.setImageResource(placeholderRes);
         }
 
         // Report Listing Action

@@ -121,6 +121,31 @@ public class CreateListingActivity extends AppCompatActivity {
 
     private void setupListeners() {
         binding.btnSubmitPost.setOnClickListener(v -> attemptSubmit());
+
+        binding.chipPresetBooks.setOnClickListener(v -> {
+            binding.etPhotoUrl.setText("https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=500");
+            binding.actvCategory.setText("Books", false);
+        });
+        binding.chipPresetKettle.setOnClickListener(v -> {
+            binding.etPhotoUrl.setText("https://images.unsplash.com/photo-1594213114663-ddf3f2a08126?w=500");
+            binding.actvCategory.setText("Kitchenware", false);
+        });
+        binding.chipPresetCycle.setOnClickListener(v -> {
+            binding.etPhotoUrl.setText("https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=500");
+            binding.actvCategory.setText("Cycles", false);
+        });
+        binding.chipPresetLamp.setOnClickListener(v -> {
+            binding.etPhotoUrl.setText("https://images.unsplash.com/photo-1534353436294-0dbd4bdac845?w=500");
+            binding.actvCategory.setText("Electronics", false);
+        });
+        binding.chipPresetDrafter.setOnClickListener(v -> {
+            binding.etPhotoUrl.setText("https://images.unsplash.com/photo-1585776245991-cf89dd7fc73a?w=500");
+            binding.actvCategory.setText("Stationery", false);
+        });
+        binding.chipPresetDesk.setOnClickListener(v -> {
+            binding.etPhotoUrl.setText("https://images.unsplash.com/photo-1518455027359-f3f8164ba6bd?w=500");
+            binding.actvCategory.setText("Furniture", false);
+        });
     }
 
     private void setupObservers() {

@@ -14,6 +14,7 @@ import com.bumptech.glide.Glide;
 import com.goodwill.app.R;
 import com.goodwill.app.data.remote.dto.ListingDto;
 import com.goodwill.app.databinding.ItemMyListingBinding;
+import com.goodwill.app.ui.listings.CategoryPlaceholderHelper;
 
 public class MyListingsAdapter extends ListAdapter<ListingDto, MyListingsAdapter.ViewHolder> {
 
@@ -102,16 +103,17 @@ public class MyListingsAdapter extends ListAdapter<ListingDto, MyListingsAdapter
                 binding.btnMarkDonated.setVisibility(View.GONE);
             }
 
-            // Load photo
+            // Load photo with category fallback
+            int placeholderRes = CategoryPlaceholderHelper.getPlaceholderForCategory(item.getCategory());
             if (item.getPhotos() != null && !item.getPhotos().isEmpty() && item.getPhotos().get(0) != null) {
                 Glide.with(itemView.getContext())
                         .load(item.getPhotos().get(0))
                         .centerCrop()
-                        .placeholder(R.color.surface_variant)
-                        .error(R.color.surface_variant)
+                        .placeholder(placeholderRes)
+                        .error(placeholderRes)
                         .into(binding.ivListingImage);
             } else {
-                binding.ivListingImage.setImageResource(android.R.drawable.ic_menu_gallery);
+                binding.ivListingImage.setImageResource(placeholderRes);
             }
 
             // Button listeners

@@ -182,6 +182,78 @@
 
             </com.google.android.material.textfield.TextInputLayout>
 
+            <!-- Quick Photo Presets -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:text="⚡ Quick Campus Photo Presets (Tap to Pre-fill):"
+                android:textSize="12sp"
+                android:textColor="@color/text_secondary" />
+
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:scrollbars="none">
+
+                <LinearLayout
+                    android:id="@+id/llPhotoPresets"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipPresetBooks"
+                        style="@style/Widget.MaterialComponents.Chip.Action"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="📚 Textbook" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipPresetKettle"
+                        style="@style/Widget.MaterialComponents.Chip.Action"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:text="☕ Kettle" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipPresetCycle"
+                        style="@style/Widget.MaterialComponents.Chip.Action"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:text="🚲 Cycle" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipPresetLamp"
+                        style="@style/Widget.MaterialComponents.Chip.Action"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:text="💡 Study Lamp" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipPresetDrafter"
+                        style="@style/Widget.MaterialComponents.Chip.Action"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:text="📐 Drafter" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipPresetDesk"
+                        style="@style/Widget.MaterialComponents.Chip.Action"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:text="🪑 Desk" />
+
+                </LinearLayout>
+
+            </HorizontalScrollView>
+
             <!-- Error banner -->
             <TextView
                 android:id="@+id/tvFormError"

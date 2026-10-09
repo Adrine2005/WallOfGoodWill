@@ -93,16 +93,17 @@ public class ListingsAdapter extends ListAdapter<ListingDto, ListingsAdapter.Vie
                 binding.tvBadgeType.setBackground(ContextCompat.getDrawable(itemView.getContext(), R.drawable.bg_badge_sell));
             }
 
-            // Load Image with Glide
+            // Load Image with Glide and category fallback
+            int placeholderRes = CategoryPlaceholderHelper.getPlaceholderForCategory(item.getCategory());
             if (item.getPhotos() != null && !item.getPhotos().isEmpty() && item.getPhotos().get(0) != null) {
                 Glide.with(itemView.getContext())
                         .load(item.getPhotos().get(0))
                         .centerCrop()
-                        .placeholder(R.color.surface_variant)
-                        .error(R.color.surface_variant)
+                        .placeholder(placeholderRes)
+                        .error(placeholderRes)
                         .into(binding.ivListingImage);
             } else {
-                binding.ivListingImage.setImageResource(android.R.drawable.ic_menu_gallery);
+                binding.ivListingImage.setImageResource(placeholderRes);
             }
 
             itemView.setOnClickListener(v -> {
