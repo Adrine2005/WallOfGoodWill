@@ -14,6 +14,7 @@ import com.goodwill.app.databinding.ActivityProfileBinding;
 import com.goodwill.app.ui.auth.LoginActivity;
 import com.goodwill.app.ui.listings.CreateListingActivity;
 import com.goodwill.app.ui.listings.ListingDetailActivity;
+import com.goodwill.app.ui.requests.DonationRequestsActivity;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
 
@@ -101,6 +102,11 @@ public class ProfileActivity extends AppCompatActivity {
 
     private void setupListeners() {
         binding.swipeRefresh.setOnRefreshListener(() -> viewModel.loadMyListings());
+
+        binding.btnViewRequests.setOnClickListener(v -> {
+            Intent intent = new Intent(ProfileActivity.this, DonationRequestsActivity.class);
+            startActivity(intent);
+        });
 
         binding.btnCreateFirstListing.setOnClickListener(v -> {
             Intent intent = new Intent(ProfileActivity.this, CreateListingActivity.class);

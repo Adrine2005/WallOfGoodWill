@@ -58,6 +58,11 @@
             android:name=".ui.profile.ProfileActivity"
             android:exported="false" />
 
+        <!-- Donation Requests Screen -->
+        <activity
+            android:name=".ui.requests.DonationRequestsActivity"
+            android:exported="false" />
+
     </application>
 
 </manifest>

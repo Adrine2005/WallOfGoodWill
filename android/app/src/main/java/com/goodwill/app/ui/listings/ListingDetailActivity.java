@@ -11,9 +11,13 @@ import com.goodwill.app.R;
 import com.goodwill.app.data.remote.dto.ListingDto;
 import com.goodwill.app.databinding.ActivityListingDetailBinding;
 
+import com.goodwill.app.data.local.SessionManager;
+import com.goodwill.app.ui.requests.RequestItemBottomSheetDialogFragment;
+
 public class ListingDetailActivity extends AppCompatActivity {
 
     private ActivityListingDetailBinding binding;
+    private SessionManager sessionManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -21,6 +25,7 @@ public class ListingDetailActivity extends AppCompatActivity {
         binding = ActivityListingDetailBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
+        sessionManager = new SessionManager(this);
         setupToolbar();
 
         ListingDto item = (ListingDto) getIntent().getSerializableExtra("extra_listing");
@@ -40,21 +45,58 @@ public class ListingDetailActivity extends AppCompatActivity {
         binding.tvDetailTitle.setText(item.getTitle());
         binding.tvDetailDescription.setText(item.getDescription());
 
+        boolean isOwner = sessionManager.getUser() != null &&
+                sessionManager.getUser().getUid().equals(item.getSellerId());
+        boolean isClosed = "DONATED".equalsIgnoreCase(item.getStatus()) || "SOLD".equalsIgnoreCase(item.getStatus());
+
         // Price & Badges
         if (item.isDonation()) {
             binding.tvDetailPrice.setText("Free Donation");
             binding.tvDetailPrice.setTextColor(ContextCompat.getColor(this, R.color.success));
-            binding.tvDetailBadgeType.setText("DONATE • Free");
-            binding.tvDetailBadgeType.setBackground(ContextCompat.getDrawable(this, R.drawable.bg_badge_donate));
-            binding.btnContactSeller.setText("Request Item from Donor");
-            binding.btnContactSeller.setBackgroundColor(ContextCompat.getColor(this, R.color.success));
+            binding.tvDetailBadgeType.setText(isClosed ? "DONATED" : "DONATE • Free");
+            binding.tvDetailBadgeType.setBackground(ContextCompat.getDrawable(this,
+                    isClosed ? R.drawable.bg_badge_sold : R.drawable.bg_badge_donate));
+
+            if (isClosed) {
+                binding.btnContactSeller.setEnabled(false);
+                binding.btnContactSeller.setText("Item Already Donated");
+                binding.btnContactSeller.setBackgroundColor(ContextCompat.getColor(this, R.color.text_secondary));
+            } else if (isOwner) {
+                binding.btnContactSeller.setText("You are the Donor (View Requests)");
+                binding.btnContactSeller.setBackgroundColor(ContextCompat.getColor(this, R.color.secondary));
+                binding.btnContactSeller.setOnClickListener(v -> {
+                    Toast.makeText(this, "Check your incoming requests from your Profile screen", Toast.LENGTH_SHORT).show();
+                });
+            } else {
+                binding.btnContactSeller.setText("Request Item from Donor");
+                binding.btnContactSeller.setBackgroundColor(ContextCompat.getColor(this, R.color.success));
+                binding.btnContactSeller.setOnClickListener(v -> {
+                    RequestItemBottomSheetDialogFragment.newInstance(item.getId(), item.getTitle())
+                            .show(getSupportFragmentManager(), RequestItemBottomSheetDialogFragment.TAG);
+                });
+            }
         } else {
             binding.tvDetailPrice.setText(String.format("₹%.0f", item.getPrice()));
             binding.tvDetailPrice.setTextColor(ContextCompat.getColor(this, R.color.primary));
-            binding.tvDetailBadgeType.setText(String.format("₹%.0f", item.getPrice()));
-            binding.tvDetailBadgeType.setBackground(ContextCompat.getDrawable(this, R.drawable.bg_badge_sell));
-            binding.btnContactSeller.setText(String.format("Contact Seller to Buy (₹%.0f)", item.getPrice()));
-            binding.btnContactSeller.setBackgroundColor(ContextCompat.getColor(this, R.color.primary));
+            binding.tvDetailBadgeType.setText(isClosed ? "SOLD" : String.format("₹%.0f", item.getPrice()));
+            binding.tvDetailBadgeType.setBackground(ContextCompat.getDrawable(this,
+                    isClosed ? R.drawable.bg_badge_sold : R.drawable.bg_badge_sell));
+
+            if (isClosed) {
+                binding.btnContactSeller.setEnabled(false);
+                binding.btnContactSeller.setText("Item Sold");
+                binding.btnContactSeller.setBackgroundColor(ContextCompat.getColor(this, R.color.text_secondary));
+            } else if (isOwner) {
+                binding.btnContactSeller.setEnabled(false);
+                binding.btnContactSeller.setText("Your Listing");
+                binding.btnContactSeller.setBackgroundColor(ContextCompat.getColor(this, R.color.secondary));
+            } else {
+                binding.btnContactSeller.setText(String.format("Contact Seller to Buy (₹%.0f)", item.getPrice()));
+                binding.btnContactSeller.setBackgroundColor(ContextCompat.getColor(this, R.color.primary));
+                binding.btnContactSeller.setOnClickListener(v -> {
+                    Toast.makeText(this, "Inquiry sent to seller! Visit " + item.getHostelBlock() + " Room " + item.getRoomNo(), Toast.LENGTH_LONG).show();
+                });
+            }
         }
 
         binding.tvDetailCategory.setText(item.getCategory() != null ? item.getCategory() : "GENERAL");
@@ -85,10 +127,5 @@ public class ListingDetailActivity extends AppCompatActivity {
         } else {
             binding.ivDetailPhoto.setImageResource(android.R.drawable.ic_menu_gallery);
         }
-
-        binding.btnContactSeller.setOnClickListener(v -> {
-            String action = item.isDonation() ? "Donation request sent!" : "Inquiry sent to seller!";
-            Toast.makeText(this, action + " Visit " + item.getHostelBlock() + " Room " + item.getRoomNo(), Toast.LENGTH_LONG).show();
-        });
     }
 }

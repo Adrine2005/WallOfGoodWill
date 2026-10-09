@@ -10,6 +10,8 @@
     <color name="success_container">#E8F5E9</color>
     <color name="error">#C62828</color>
     <color name="error_container">#FFEBEE</color>
+    <color name="warning">#E65100</color>
+    <color name="warning_container">#FFF3E0</color>
     <color name="background">#F8F9FA</color>
     <color name="surface">#FFFFFF</color>
     <color name="surface_variant">#F1F3F4</color>

@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="16dp"
+    android:layout_marginEnd="16dp"
+    android:layout_marginTop="8dp"
+    android:layout_marginBottom="8dp"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="1dp"
+    app:cardBackgroundColor="@color/surface"
+    app:strokeColor="@color/outline"
+    app:strokeWidth="1dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- Header: Listing Title & Status Badge -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/tvRequestListingTitle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_primary"
+                android:maxLines="1"
+                android:ellipsize="end"
+                tools:text="Engineering Mathematics Vol 1" />
+
+            <TextView
+                android:id="@+id/tvRequestStatusBadge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp"
+                android:paddingTop="4dp"
+                android:paddingBottom="4dp"
+                android:background="@drawable/bg_category_tag"
+                android:textColor="@color/warning"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                tools:text="PENDING" />
+
+        </LinearLayout>
+
+        <!-- Requester Info -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/tvRequesterName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="@color/primary"
+                tools:text="Siddharth Rao" />
+
+            <TextView
+                android:id="@+id/tvRequesterLocation"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="8dp"
+                android:textSize="13sp"
+                android:textColor="@color/text_secondary"
+                android:maxLines="1"
+                android:ellipsize="end"
+                tools:text="• Hostel A Room 204" />
+
+        </LinearLayout>
+
+        <!-- Requester Message Container -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:padding="12dp"
+            android:background="@drawable/bg_category_tag"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Note from Requester:"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_secondary" />
+
+            <TextView
+                android:id="@+id/tvRequestMessage"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:textSize="13sp"
+                android:textColor="@color/text_primary"
+                android:lineSpacingExtra="2dp"
+                tools:text="I need this book urgently for the midterm exam next week, please consider me!" />
+
+        </LinearLayout>
+
+        <!-- Resolution Status Label (if resolved) -->
+        <TextView
+            android:id="@+id/tvResolutionStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:visibility="gone"
+            tools:text="✓ Accepted Recipient • Listing Marked Donated"
+            tools:visibility="visible" />
+
+        <!-- Actions Row (if pending) -->
+        <LinearLayout
+            android:id="@+id/layoutActions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnDeclineRequest"
+                android:layout_width="0dp"
+                android:layout_height="44dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="6dp"
+                android:text="Decline"
+                android:textColor="@color/error"
+                app:strokeColor="@color/error"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                app:cornerRadius="8dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnAcceptRequest"
+                android:layout_width="0dp"
+                android:layout_height="44dp"
+                android:layout_weight="1.5"
+                android:layout_marginStart="6dp"
+                android:text="Accept Recipient"
+                android:backgroundTint="@color/success"
+                app:cornerRadius="8dp" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

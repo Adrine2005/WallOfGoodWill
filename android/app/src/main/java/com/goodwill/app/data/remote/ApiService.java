@@ -1,7 +1,9 @@
 package com.goodwill.app.data.remote;
 
 import com.goodwill.app.data.remote.dto.AuthResponse;
+import com.goodwill.app.data.remote.dto.CreateDonationRequest;
 import com.goodwill.app.data.remote.dto.CreateListingRequest;
+import com.goodwill.app.data.remote.dto.DonationRequestDto;
 import com.goodwill.app.data.remote.dto.EditListingRequest;
 import com.goodwill.app.data.remote.dto.ListingDto;
 import com.goodwill.app.data.remote.dto.RegisterRequest;
@@ -67,4 +69,23 @@ public interface ApiService {
 
     @DELETE("v1/listings/{id}")
     Call<Map<String, String>> deleteListing(@Path("id") String id);
+
+    // Donation Requests endpoints
+    @POST("v1/listings/{id}/requests")
+    Call<DonationRequestDto> createDonationRequest(
+            @Path("id") String listingId,
+            @Body CreateDonationRequest request
+    );
+
+    @GET("v1/listings/{id}/requests")
+    Call<List<DonationRequestDto>> getListingRequests(@Path("id") String listingId);
+
+    @GET("v1/requests/incoming")
+    Call<List<DonationRequestDto>> getIncomingRequests();
+
+    @POST("v1/requests/{id}/accept")
+    Call<DonationRequestDto> acceptRequest(@Path("id") String requestId);
+
+    @POST("v1/requests/{id}/decline")
+    Call<DonationRequestDto> declineRequest(@Path("id") String requestId);
 }

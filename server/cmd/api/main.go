@@ -13,10 +13,11 @@ import (
 	"goodwill-server/internal/handlers"
 	"goodwill-server/internal/invites"
 	"goodwill-server/internal/listings"
+	"goodwill-server/internal/requests"
 	"goodwill-server/internal/users"
 )
 
-func SetupRouter(userService *users.Service, inviteService *invites.Service, listingsService *listings.Service, verifier auth.TokenVerifier) *chi.Mux {
+func SetupRouter(userService *users.Service, inviteService *invites.Service, listingsService *listings.Service, requestsService *requests.Service, verifier auth.TokenVerifier) *chi.Mux {
 	r := chi.NewRouter()
 
 	r.Use(middleware.RequestID)
@@ -29,6 +30,7 @@ func SetupRouter(userService *users.Service, inviteService *invites.Service, lis
 	authHandler := handlers.NewAuthHandler(userService, inviteService, verifier)
 	adminHandler := handlers.NewAdminHandler(inviteService)
 	listingsHandler := handlers.NewListingsHandler(listingsService, userService)
+	requestsHandler := handlers.NewRequestsHandler(requestsService)
 
 	r.Route("/v1/auth", func(r chi.Router) {
 		r.Post("/register", authHandler.Register)
@@ -56,7 +58,16 @@ func SetupRouter(userService *users.Service, inviteService *invites.Service, lis
 			r.Patch("/{id}", listingsHandler.UpdateListing)
 			r.Put("/{id}/status", listingsHandler.UpdateListingStatus)
 			r.Delete("/{id}", listingsHandler.DeleteListing)
+			r.Post("/{id}/requests", requestsHandler.CreateRequest)
+			r.Get("/{id}/requests", requestsHandler.GetListingRequests)
 		})
+	})
+
+	r.Route("/v1/requests", func(r chi.Router) {
+		r.Use(auth.Middleware(verifier))
+		r.Get("/incoming", requestsHandler.GetIncomingRequests)
+		r.Post("/{id}/accept", requestsHandler.AcceptRequest)
+		r.Post("/{id}/decline", requestsHandler.DeclineRequest)
 	})
 
 	return r
@@ -68,9 +79,10 @@ func main() {
 	userService := users.NewService()
 	inviteService := invites.NewService()
 	listingsService := listings.NewService()
+	requestsService := requests.NewService(listingsService, userService)
 	verifier := auth.NewMockVerifier()
 
-	r := SetupRouter(userService, inviteService, listingsService, verifier)
+	r := SetupRouter(userService, inviteService, listingsService, requestsService, verifier)
 
 	addr := fmt.Sprintf(":%s", cfg.Port)
 	log.Printf("Wall of Goodwill server starting on port %s in %s mode\n", cfg.Port, cfg.Env)
