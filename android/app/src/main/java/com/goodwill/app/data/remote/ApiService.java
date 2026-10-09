@@ -6,6 +6,7 @@ import com.goodwill.app.data.remote.dto.ChatMessageDto;
 import com.goodwill.app.data.remote.dto.CreateConversationRequest;
 import com.goodwill.app.data.remote.dto.CreateDonationRequest;
 import com.goodwill.app.data.remote.dto.CreateListingRequest;
+import com.goodwill.app.data.remote.dto.CreateWishlistRequest;
 import com.goodwill.app.data.remote.dto.DonationRequestDto;
 import com.goodwill.app.data.remote.dto.EditListingRequest;
 import com.goodwill.app.data.remote.dto.ListingDto;
@@ -16,6 +17,7 @@ import com.goodwill.app.data.remote.dto.UnreadCountDto;
 import com.goodwill.app.data.remote.dto.UpdateStatusRequest;
 import com.goodwill.app.data.remote.dto.UserDto;
 import com.goodwill.app.data.remote.dto.VerifyQrRequest;
+import com.goodwill.app.data.remote.dto.WishlistItemDto;
 
 import java.util.List;
 import java.util.Map;
@@ -126,4 +128,23 @@ public interface ApiService {
             @Path("id") String conversationId,
             @Body SendMessageRequest request
     );
+
+    // Wishlist endpoints
+    @POST("v1/wishlist")
+    Call<WishlistItemDto> createWishlistItem(@Body CreateWishlistRequest request);
+
+    @GET("v1/wishlist")
+    Call<List<WishlistItemDto>> getWishlistItems(
+            @Query("category") String category,
+            @Query("search") String search
+    );
+
+    @GET("v1/wishlist/my")
+    Call<List<WishlistItemDto>> getMyWishlistItems();
+
+    @GET("v1/wishlist/{id}")
+    Call<WishlistItemDto> getWishlistItemDetail(@Path("id") String id);
+
+    @DELETE("v1/wishlist/{id}")
+    Call<Map<String, String>> deleteWishlistItem(@Path("id") String id);
 }

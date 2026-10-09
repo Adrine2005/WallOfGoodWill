@@ -16,6 +16,7 @@ import com.goodwill.app.ui.chat.ConversationsActivity;
 import com.goodwill.app.ui.listings.CreateListingActivity;
 import com.goodwill.app.ui.listings.ListingDetailActivity;
 import com.goodwill.app.ui.requests.DonationRequestsActivity;
+import com.goodwill.app.ui.wishlist.WishlistActivity;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
 
@@ -111,6 +112,11 @@ public class ProfileActivity extends AppCompatActivity {
 
         binding.btnViewConversations.setOnClickListener(v -> {
             Intent intent = new Intent(ProfileActivity.this, ConversationsActivity.class);
+            startActivity(intent);
+        });
+
+        binding.btnViewWishlist.setOnClickListener(v -> {
+            Intent intent = new Intent(ProfileActivity.this, WishlistActivity.class);
             startActivity(intent);
         });
 

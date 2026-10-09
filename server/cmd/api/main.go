@@ -17,9 +17,10 @@ import (
 	"goodwill-server/internal/notifications"
 	"goodwill-server/internal/requests"
 	"goodwill-server/internal/users"
+	"goodwill-server/internal/wishlist"
 )
 
-func SetupRouter(userService *users.Service, inviteService *invites.Service, listingsService *listings.Service, requestsService *requests.Service, notifService *notifications.Service, chatService *chat.Service, verifier auth.TokenVerifier) *chi.Mux {
+func SetupRouter(userService *users.Service, inviteService *invites.Service, listingsService *listings.Service, requestsService *requests.Service, notifService *notifications.Service, chatService *chat.Service, wishlistService *wishlist.Service, verifier auth.TokenVerifier) *chi.Mux {
 	r := chi.NewRouter()
 
 	r.Use(middleware.RequestID)
@@ -35,6 +36,7 @@ func SetupRouter(userService *users.Service, inviteService *invites.Service, lis
 	requestsHandler := handlers.NewRequestsHandler(requestsService)
 	notifHandler := handlers.NewNotificationsHandler(notifService)
 	chatHandler := handlers.NewChatHandler(chatService)
+	wishlistHandler := handlers.NewWishlistHandler(wishlistService, userService)
 
 	r.Route("/v1/auth", func(r chi.Router) {
 		r.Post("/register", authHandler.Register)
@@ -91,6 +93,15 @@ func SetupRouter(userService *users.Service, inviteService *invites.Service, lis
 		r.Post("/conversations/{id}/messages", chatHandler.SendMessage)
 	})
 
+	r.Route("/v1/wishlist", func(r chi.Router) {
+		r.Use(auth.Middleware(verifier))
+		r.Post("/", wishlistHandler.CreateWishlistItem)
+		r.Get("/", wishlistHandler.ListWishlistItems)
+		r.Get("/my", wishlistHandler.GetMyWishlistItems)
+		r.Get("/{id}", wishlistHandler.GetWishlistItem)
+		r.Delete("/{id}", wishlistHandler.DeleteWishlistItem)
+	})
+
 	return r
 }
 
@@ -103,9 +114,10 @@ func main() {
 	notifService := notifications.NewService()
 	requestsService := requests.NewService(listingsService, userService, notifService)
 	chatService := chat.NewService(listingsService, userService, notifService)
+	wishlistService := wishlist.NewService(userService)
 	verifier := auth.NewMockVerifier()
 
-	r := SetupRouter(userService, inviteService, listingsService, requestsService, notifService, chatService, verifier)
+	r := SetupRouter(userService, inviteService, listingsService, requestsService, notifService, chatService, wishlistService, verifier)
 
 	addr := fmt.Sprintf(":%s", cfg.Port)
 	log.Printf("Wall of Goodwill server starting on port %s in %s mode\n", cfg.Port, cfg.Env)

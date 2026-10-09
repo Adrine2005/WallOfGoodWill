@@ -23,6 +23,7 @@ import com.goodwill.app.ui.listings.ListingsViewModel;
 import com.goodwill.app.ui.notifications.NotificationsActivity;
 import com.goodwill.app.ui.notifications.NotificationsViewModel;
 import com.goodwill.app.ui.profile.ProfileActivity;
+import com.goodwill.app.ui.wishlist.WishlistActivity;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 public class MainActivity extends AppCompatActivity {
@@ -66,6 +67,11 @@ public class MainActivity extends AppCompatActivity {
 
         binding.btnMessages.setOnClickListener(v -> {
             Intent intent = new Intent(MainActivity.this, ConversationsActivity.class);
+            startActivity(intent);
+        });
+
+        binding.btnWishlist.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, WishlistActivity.class);
             startActivity(intent);
         });
 

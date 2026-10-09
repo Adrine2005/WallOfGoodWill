@@ -78,6 +78,12 @@
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
 
+        <!-- Wishlist / Looking For Screen -->
+        <activity
+            android:name=".ui.wishlist.WishlistActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
     </application>
 
 </manifest>
