@@ -18,6 +18,8 @@ import com.goodwill.app.data.remote.dto.UpdateStatusRequest;
 import com.goodwill.app.data.remote.dto.UserDto;
 import com.goodwill.app.data.remote.dto.VerifyQrRequest;
 import com.goodwill.app.data.remote.dto.LeaderboardEntryDto;
+import com.goodwill.app.data.remote.dto.ReportDto;
+import com.goodwill.app.data.remote.dto.ReportListingRequest;
 import com.goodwill.app.data.remote.dto.UserPointsDto;
 import com.goodwill.app.data.remote.dto.WishlistItemDto;
 
@@ -156,4 +158,14 @@ public interface ApiService {
 
     @GET("v1/points/leaderboard")
     Call<List<LeaderboardEntryDto>> getLeaderboard();
+
+    // Listing Moderation & Reporting endpoints
+    @POST("v1/listings/{id}/reports")
+    Call<ReportDto> reportListing(
+            @Path("id") String listingId,
+            @Body ReportListingRequest request
+    );
+
+    @GET("v1/listings/{id}/reports")
+    Call<List<ReportDto>> getListingReports(@Path("id") String listingId);
 }

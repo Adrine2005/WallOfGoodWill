@@ -54,6 +54,7 @@ const (
 	StatusSold    ListingStatus = "SOLD"
 	StatusDonated ListingStatus = "DONATED"
 	StatusDeleted ListingStatus = "DELETED"
+	StatusHidden  ListingStatus = "HIDDEN"
 )
 
 type Listing struct {
@@ -330,6 +331,20 @@ func (s *Service) UpdateStatus(id string, sellerID string, status ListingStatus)
 
 	if item.SellerID != strings.TrimSpace(sellerID) {
 		return ErrUnauthorized
+	}
+
+	item.Status = status
+	item.UpdatedAt = time.Now().UTC()
+	return nil
+}
+
+func (s *Service) SetSystemStatus(id string, status ListingStatus) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	item, exists := s.listings[strings.TrimSpace(id)]
+	if !exists || item.Status == StatusDeleted {
+		return ErrListingNotFound
 	}
 
 	item.Status = status

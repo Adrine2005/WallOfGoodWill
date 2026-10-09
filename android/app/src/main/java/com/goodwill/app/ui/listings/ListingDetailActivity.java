@@ -139,5 +139,16 @@ public class ListingDetailActivity extends AppCompatActivity {
         } else {
             binding.ivDetailPhoto.setImageResource(android.R.drawable.ic_menu_gallery);
         }
+
+        // Report Listing Action
+        if (!isOwner) {
+            binding.btnReportListing.setVisibility(View.VISIBLE);
+            binding.btnReportListing.setOnClickListener(v -> {
+                ReportBottomSheetDialogFragment dialog = ReportBottomSheetDialogFragment.newInstance(item.getId());
+                dialog.show(getSupportFragmentManager(), ReportBottomSheetDialogFragment.TAG);
+            });
+        } else {
+            binding.btnReportListing.setVisibility(View.GONE);
+        }
     }
 }
