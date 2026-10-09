@@ -172,6 +172,17 @@
                             android:textColor="@color/primary"
                             app:cornerRadius="10dp" />
 
+                        <!-- Conversations Button -->
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnViewConversations"
+                            style="@style/Widget.Material3.Button.TonalButton"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="8dp"
+                            android:text="💬 View Messages &amp; Chats"
+                            android:textColor="@color/primary"
+                            app:cornerRadius="10dp" />
+
                         <!-- Sign Out Button -->
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btnSignOut"

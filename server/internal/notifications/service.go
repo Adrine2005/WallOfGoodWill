@@ -22,6 +22,7 @@ const (
 	TypeRequestReceived NotificationType = "REQUEST_RECEIVED"
 	TypeRequestAccepted NotificationType = "REQUEST_ACCEPTED"
 	TypeRequestDeclined NotificationType = "REQUEST_DECLINED"
+	TypeChatMessage     NotificationType = "CHAT_MESSAGE"
 )
 
 type Notification struct {

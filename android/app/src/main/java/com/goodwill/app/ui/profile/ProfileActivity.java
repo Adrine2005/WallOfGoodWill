@@ -12,6 +12,7 @@ import com.goodwill.app.data.remote.dto.ListingDto;
 import com.goodwill.app.data.remote.dto.UserDto;
 import com.goodwill.app.databinding.ActivityProfileBinding;
 import com.goodwill.app.ui.auth.LoginActivity;
+import com.goodwill.app.ui.chat.ConversationsActivity;
 import com.goodwill.app.ui.listings.CreateListingActivity;
 import com.goodwill.app.ui.listings.ListingDetailActivity;
 import com.goodwill.app.ui.requests.DonationRequestsActivity;
@@ -105,6 +106,11 @@ public class ProfileActivity extends AppCompatActivity {
 
         binding.btnViewRequests.setOnClickListener(v -> {
             Intent intent = new Intent(ProfileActivity.this, DonationRequestsActivity.class);
+            startActivity(intent);
+        });
+
+        binding.btnViewConversations.setOnClickListener(v -> {
+            Intent intent = new Intent(ProfileActivity.this, ConversationsActivity.class);
             startActivity(intent);
         });
 

@@ -15,6 +15,7 @@ import com.goodwill.app.data.local.SessionManager;
 import com.goodwill.app.data.remote.dto.ListingDto;
 import com.goodwill.app.data.remote.dto.UserDto;
 import com.goodwill.app.databinding.ActivityMainBinding;
+import com.goodwill.app.ui.chat.ConversationsActivity;
 import com.goodwill.app.ui.listings.CreateListingActivity;
 import com.goodwill.app.ui.listings.ListingDetailActivity;
 import com.goodwill.app.ui.listings.ListingsAdapter;
@@ -60,6 +61,11 @@ public class MainActivity extends AppCompatActivity {
     private void setupNotificationsButton() {
         binding.btnNotifications.setOnClickListener(v -> {
             Intent intent = new Intent(MainActivity.this, NotificationsActivity.class);
+            startActivity(intent);
+        });
+
+        binding.btnMessages.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, ConversationsActivity.class);
             startActivity(intent);
         });
 

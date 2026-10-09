@@ -1,6 +1,9 @@
 package com.goodwill.app.data.remote;
 
 import com.goodwill.app.data.remote.dto.AuthResponse;
+import com.goodwill.app.data.remote.dto.ChatConversationDto;
+import com.goodwill.app.data.remote.dto.ChatMessageDto;
+import com.goodwill.app.data.remote.dto.CreateConversationRequest;
 import com.goodwill.app.data.remote.dto.CreateDonationRequest;
 import com.goodwill.app.data.remote.dto.CreateListingRequest;
 import com.goodwill.app.data.remote.dto.DonationRequestDto;
@@ -8,6 +11,7 @@ import com.goodwill.app.data.remote.dto.EditListingRequest;
 import com.goodwill.app.data.remote.dto.ListingDto;
 import com.goodwill.app.data.remote.dto.NotificationDto;
 import com.goodwill.app.data.remote.dto.RegisterRequest;
+import com.goodwill.app.data.remote.dto.SendMessageRequest;
 import com.goodwill.app.data.remote.dto.UnreadCountDto;
 import com.goodwill.app.data.remote.dto.UpdateStatusRequest;
 import com.goodwill.app.data.remote.dto.UserDto;
@@ -103,4 +107,23 @@ public interface ApiService {
 
     @POST("v1/notifications/read-all")
     Call<Map<String, Integer>> markAllNotificationsAsRead();
+
+    // Chat endpoints
+    @POST("v1/chat/conversations")
+    Call<ChatConversationDto> createOrGetConversation(@Body CreateConversationRequest request);
+
+    @GET("v1/chat/conversations")
+    Call<List<ChatConversationDto>> getConversations();
+
+    @GET("v1/chat/conversations/{id}")
+    Call<ChatConversationDto> getConversationDetail(@Path("id") String conversationId);
+
+    @GET("v1/chat/conversations/{id}/messages")
+    Call<List<ChatMessageDto>> getMessages(@Path("id") String conversationId);
+
+    @POST("v1/chat/conversations/{id}/messages")
+    Call<ChatMessageDto> sendMessage(
+            @Path("id") String conversationId,
+            @Body SendMessageRequest request
+    );
 }

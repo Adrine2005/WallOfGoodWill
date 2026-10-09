@@ -9,6 +9,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 
 	"goodwill-server/internal/auth"
+	"goodwill-server/internal/chat"
 	"goodwill-server/internal/config"
 	"goodwill-server/internal/handlers"
 	"goodwill-server/internal/invites"
@@ -18,7 +19,7 @@ import (
 	"goodwill-server/internal/users"
 )
 
-func SetupRouter(userService *users.Service, inviteService *invites.Service, listingsService *listings.Service, requestsService *requests.Service, notifService *notifications.Service, verifier auth.TokenVerifier) *chi.Mux {
+func SetupRouter(userService *users.Service, inviteService *invites.Service, listingsService *listings.Service, requestsService *requests.Service, notifService *notifications.Service, chatService *chat.Service, verifier auth.TokenVerifier) *chi.Mux {
 	r := chi.NewRouter()
 
 	r.Use(middleware.RequestID)
@@ -33,6 +34,7 @@ func SetupRouter(userService *users.Service, inviteService *invites.Service, lis
 	listingsHandler := handlers.NewListingsHandler(listingsService, userService)
 	requestsHandler := handlers.NewRequestsHandler(requestsService)
 	notifHandler := handlers.NewNotificationsHandler(notifService)
+	chatHandler := handlers.NewChatHandler(chatService)
 
 	r.Route("/v1/auth", func(r chi.Router) {
 		r.Post("/register", authHandler.Register)
@@ -80,6 +82,15 @@ func SetupRouter(userService *users.Service, inviteService *invites.Service, lis
 		r.Post("/read-all", notifHandler.MarkAllAsRead)
 	})
 
+	r.Route("/v1/chat", func(r chi.Router) {
+		r.Use(auth.Middleware(verifier))
+		r.Post("/conversations", chatHandler.CreateOrGetConversation)
+		r.Get("/conversations", chatHandler.GetConversations)
+		r.Get("/conversations/{id}", chatHandler.GetConversation)
+		r.Get("/conversations/{id}/messages", chatHandler.GetMessages)
+		r.Post("/conversations/{id}/messages", chatHandler.SendMessage)
+	})
+
 	return r
 }
 
@@ -91,9 +102,10 @@ func main() {
 	listingsService := listings.NewService()
 	notifService := notifications.NewService()
 	requestsService := requests.NewService(listingsService, userService, notifService)
+	chatService := chat.NewService(listingsService, userService, notifService)
 	verifier := auth.NewMockVerifier()
 
-	r := SetupRouter(userService, inviteService, listingsService, requestsService, notifService, verifier)
+	r := SetupRouter(userService, inviteService, listingsService, requestsService, notifService, chatService, verifier)
 
 	addr := fmt.Sprintf(":%s", cfg.Port)
 	log.Printf("Wall of Goodwill server starting on port %s in %s mode\n", cfg.Port, cfg.Env)

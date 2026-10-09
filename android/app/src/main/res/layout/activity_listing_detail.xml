@@ -202,10 +202,23 @@
                     android:layout_width="match_parent"
                     android:layout_height="56dp"
                     android:layout_marginTop="32dp"
-                    android:layout_marginBottom="24dp"
+                    android:layout_marginBottom="8dp"
                     android:text="Request Item from Donor"
                     android:textSize="15sp"
                     app:cornerRadius="12dp" />
+
+                <!-- 1-on-1 Chat Button -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnChatSeller"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp"
+                    android:layout_marginBottom="24dp"
+                    android:text="💬 Message Seller / Donor"
+                    android:textSize="15sp"
+                    android:textColor="@color/primary"
+                    app:cornerRadius="12dp"
+                    app:strokeColor="@color/primary" />
 
             </LinearLayout>
 

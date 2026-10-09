@@ -1,6 +1,7 @@
 package com.goodwill.app.ui.listings;
 
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -12,6 +13,7 @@ import com.goodwill.app.data.remote.dto.ListingDto;
 import com.goodwill.app.databinding.ActivityListingDetailBinding;
 
 import com.goodwill.app.data.local.SessionManager;
+import com.goodwill.app.ui.chat.ChatActivity;
 import com.goodwill.app.ui.requests.RequestItemBottomSheetDialogFragment;
 
 public class ListingDetailActivity extends AppCompatActivity {
@@ -48,6 +50,16 @@ public class ListingDetailActivity extends AppCompatActivity {
         boolean isOwner = sessionManager.getUser() != null &&
                 sessionManager.getUser().getUid().equals(item.getSellerId());
         boolean isClosed = "DONATED".equalsIgnoreCase(item.getStatus()) || "SOLD".equalsIgnoreCase(item.getStatus());
+
+        // Chat Action Button configuration
+        if (isOwner || isClosed) {
+            binding.btnChatSeller.setVisibility(View.GONE);
+        } else {
+            binding.btnChatSeller.setVisibility(View.VISIBLE);
+            binding.btnChatSeller.setOnClickListener(v -> {
+                ChatActivity.startWithListing(this, item.getId(), item.getTitle());
+            });
+        }
 
         // Price & Badges
         if (item.isDonation()) {
@@ -91,10 +103,10 @@ public class ListingDetailActivity extends AppCompatActivity {
                 binding.btnContactSeller.setText("Your Listing");
                 binding.btnContactSeller.setBackgroundColor(ContextCompat.getColor(this, R.color.secondary));
             } else {
-                binding.btnContactSeller.setText(String.format("Contact Seller to Buy (₹%.0f)", item.getPrice()));
+                binding.btnContactSeller.setText(String.format("Chat to Buy (₹%.0f)", item.getPrice()));
                 binding.btnContactSeller.setBackgroundColor(ContextCompat.getColor(this, R.color.primary));
                 binding.btnContactSeller.setOnClickListener(v -> {
-                    Toast.makeText(this, "Inquiry sent to seller! Visit " + item.getHostelBlock() + " Room " + item.getRoomNo(), Toast.LENGTH_LONG).show();
+                    ChatActivity.startWithListing(this, item.getId(), item.getTitle());
                 });
             }
         }
