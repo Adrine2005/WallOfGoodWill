@@ -12,6 +12,7 @@ import (
 	"goodwill-server/internal/auth"
 	"goodwill-server/internal/handlers"
 	"goodwill-server/internal/listings"
+	"goodwill-server/internal/notifications"
 	"goodwill-server/internal/requests"
 	"goodwill-server/internal/users"
 )
@@ -19,7 +20,8 @@ import (
 func setupRequestsEnv() (http.Handler, *listings.Service, *requests.Service, *users.Service, *auth.MockVerifier) {
 	userService := users.NewService()
 	listingsService := listings.NewService()
-	requestsService := requests.NewService(listingsService, userService)
+	notifService := notifications.NewService()
+	requestsService := requests.NewService(listingsService, userService, notifService)
 	verifier := auth.NewMockVerifier()
 
 	// Donor user

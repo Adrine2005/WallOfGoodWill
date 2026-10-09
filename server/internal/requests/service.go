@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"goodwill-server/internal/listings"
+	"goodwill-server/internal/notifications"
 	"goodwill-server/internal/users"
 )
 
@@ -50,17 +51,19 @@ type DonationRequest struct {
 }
 
 type Service struct {
-	mu              sync.RWMutex
-	requests        map[string]*DonationRequest
-	listingsService *listings.Service
-	usersService    *users.Service
+	mu                   sync.RWMutex
+	requests             map[string]*DonationRequest
+	listingsService      *listings.Service
+	usersService         *users.Service
+	notificationsService *notifications.Service
 }
 
-func NewService(listingsService *listings.Service, usersService *users.Service) *Service {
+func NewService(listingsService *listings.Service, usersService *users.Service, notifService *notifications.Service) *Service {
 	return &Service{
-		requests:        make(map[string]*DonationRequest),
-		listingsService: listingsService,
-		usersService:    usersService,
+		requests:             make(map[string]*DonationRequest),
+		listingsService:      listingsService,
+		usersService:         usersService,
+		notificationsService: notifService,
 	}
 }
 
@@ -128,6 +131,17 @@ func (s *Service) CreateRequest(listingID string, requesterID string, message st
 	}
 
 	s.requests[req.ID] = req
+
+	if s.notificationsService != nil {
+		s.notificationsService.CreateNotification(
+			listing.SellerID,
+			"New Donation Request",
+			fmt.Sprintf("%s requested your donation item \"%s\"", req.RequesterName, listing.Title),
+			notifications.TypeRequestReceived,
+			req.ID,
+		)
+	}
+
 	return req, nil
 }
 
@@ -203,11 +217,30 @@ func (s *Service) AcceptRequest(requestID string, donorID string) (*DonationRequ
 		if req.ListingID == target.ListingID && req.ID != target.ID && req.Status == StatusPending {
 			req.Status = StatusDeclined
 			req.UpdatedAt = now
+			if s.notificationsService != nil {
+				s.notificationsService.CreateNotification(
+					req.RequesterID,
+					"Donation Request Update",
+					fmt.Sprintf("The item \"%s\" has been donated to another student.", req.ListingTitle),
+					notifications.TypeRequestDeclined,
+					req.ID,
+				)
+			}
 		}
 	}
 
 	// Update the listing status to DONATED
 	_ = s.listingsService.UpdateStatus(target.ListingID, donorID, listings.StatusDonated)
+
+	if s.notificationsService != nil {
+		s.notificationsService.CreateNotification(
+			target.RequesterID,
+			"Donation Request Accepted! 🎉",
+			fmt.Sprintf("Your request for \"%s\" was accepted by %s! Check your hostel room details to arrange pickup.", target.ListingTitle, target.DonorName),
+			notifications.TypeRequestAccepted,
+			target.ID,
+		)
+	}
 
 	return target, nil
 }
@@ -231,5 +264,16 @@ func (s *Service) DeclineRequest(requestID string, donorID string) (*DonationReq
 
 	target.Status = StatusDeclined
 	target.UpdatedAt = time.Now().UTC()
+
+	if s.notificationsService != nil {
+		s.notificationsService.CreateNotification(
+			target.RequesterID,
+			"Donation Request Declined",
+			fmt.Sprintf("Your request for \"%s\" was declined by the donor.", target.ListingTitle),
+			notifications.TypeRequestDeclined,
+			target.ID,
+		)
+	}
+
 	return target, nil
 }

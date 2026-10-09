@@ -63,6 +63,11 @@
             android:name=".ui.requests.DonationRequestsActivity"
             android:exported="false" />
 
+        <!-- Notifications Screen -->
+        <activity
+            android:name=".ui.notifications.NotificationsActivity"
+            android:exported="false" />
+
     </application>
 
 </manifest>

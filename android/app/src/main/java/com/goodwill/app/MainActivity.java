@@ -19,6 +19,8 @@ import com.goodwill.app.ui.listings.CreateListingActivity;
 import com.goodwill.app.ui.listings.ListingDetailActivity;
 import com.goodwill.app.ui.listings.ListingsAdapter;
 import com.goodwill.app.ui.listings.ListingsViewModel;
+import com.goodwill.app.ui.notifications.NotificationsActivity;
+import com.goodwill.app.ui.notifications.NotificationsViewModel;
 import com.goodwill.app.ui.profile.ProfileActivity;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
@@ -26,6 +28,7 @@ public class MainActivity extends AppCompatActivity {
 
     private ActivityMainBinding binding;
     private ListingsViewModel viewModel;
+    private NotificationsViewModel notifViewModel;
     private ListingsAdapter adapter;
 
     @Override
@@ -35,6 +38,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
 
         viewModel = new ViewModelProvider(this).get(ListingsViewModel.class);
+        notifViewModel = new ViewModelProvider(this).get(NotificationsViewModel.class);
 
         displayUserGreeting();
         setupRecyclerView();
@@ -42,6 +46,7 @@ public class MainActivity extends AppCompatActivity {
         setupSearch();
         setupFab();
         setupProfileButton();
+        setupNotificationsButton();
         setupObservers();
     }
 
@@ -49,6 +54,23 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         viewModel.loadFeed();
+        notifViewModel.loadUnreadCount();
+    }
+
+    private void setupNotificationsButton() {
+        binding.btnNotifications.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, NotificationsActivity.class);
+            startActivity(intent);
+        });
+
+        notifViewModel.getUnreadCount().observe(this, count -> {
+            if (count != null && count > 0) {
+                binding.tvNotificationBadge.setVisibility(View.VISIBLE);
+                binding.tvNotificationBadge.setText(count > 99 ? "99+" : String.valueOf(count));
+            } else {
+                binding.tvNotificationBadge.setVisibility(View.GONE);
+            }
+        });
     }
 
     private void displayUserGreeting() {

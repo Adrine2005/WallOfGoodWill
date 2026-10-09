@@ -13,11 +13,12 @@ import (
 	"goodwill-server/internal/handlers"
 	"goodwill-server/internal/invites"
 	"goodwill-server/internal/listings"
+	"goodwill-server/internal/notifications"
 	"goodwill-server/internal/requests"
 	"goodwill-server/internal/users"
 )
 
-func SetupRouter(userService *users.Service, inviteService *invites.Service, listingsService *listings.Service, requestsService *requests.Service, verifier auth.TokenVerifier) *chi.Mux {
+func SetupRouter(userService *users.Service, inviteService *invites.Service, listingsService *listings.Service, requestsService *requests.Service, notifService *notifications.Service, verifier auth.TokenVerifier) *chi.Mux {
 	r := chi.NewRouter()
 
 	r.Use(middleware.RequestID)
@@ -31,6 +32,7 @@ func SetupRouter(userService *users.Service, inviteService *invites.Service, lis
 	adminHandler := handlers.NewAdminHandler(inviteService)
 	listingsHandler := handlers.NewListingsHandler(listingsService, userService)
 	requestsHandler := handlers.NewRequestsHandler(requestsService)
+	notifHandler := handlers.NewNotificationsHandler(notifService)
 
 	r.Route("/v1/auth", func(r chi.Router) {
 		r.Post("/register", authHandler.Register)
@@ -70,6 +72,14 @@ func SetupRouter(userService *users.Service, inviteService *invites.Service, lis
 		r.Post("/{id}/decline", requestsHandler.DeclineRequest)
 	})
 
+	r.Route("/v1/notifications", func(r chi.Router) {
+		r.Use(auth.Middleware(verifier))
+		r.Get("/", notifHandler.GetNotifications)
+		r.Get("/unread-count", notifHandler.GetUnreadCount)
+		r.Post("/{id}/read", notifHandler.MarkAsRead)
+		r.Post("/read-all", notifHandler.MarkAllAsRead)
+	})
+
 	return r
 }
 
@@ -79,10 +89,11 @@ func main() {
 	userService := users.NewService()
 	inviteService := invites.NewService()
 	listingsService := listings.NewService()
-	requestsService := requests.NewService(listingsService, userService)
+	notifService := notifications.NewService()
+	requestsService := requests.NewService(listingsService, userService, notifService)
 	verifier := auth.NewMockVerifier()
 
-	r := SetupRouter(userService, inviteService, listingsService, requestsService, verifier)
+	r := SetupRouter(userService, inviteService, listingsService, requestsService, notifService, verifier)
 
 	addr := fmt.Sprintf(":%s", cfg.Port)
 	log.Printf("Wall of Goodwill server starting on port %s in %s mode\n", cfg.Port, cfg.Env)

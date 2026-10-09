@@ -6,7 +6,9 @@ import com.goodwill.app.data.remote.dto.CreateListingRequest;
 import com.goodwill.app.data.remote.dto.DonationRequestDto;
 import com.goodwill.app.data.remote.dto.EditListingRequest;
 import com.goodwill.app.data.remote.dto.ListingDto;
+import com.goodwill.app.data.remote.dto.NotificationDto;
 import com.goodwill.app.data.remote.dto.RegisterRequest;
+import com.goodwill.app.data.remote.dto.UnreadCountDto;
 import com.goodwill.app.data.remote.dto.UpdateStatusRequest;
 import com.goodwill.app.data.remote.dto.UserDto;
 import com.goodwill.app.data.remote.dto.VerifyQrRequest;
@@ -88,4 +90,17 @@ public interface ApiService {
 
     @POST("v1/requests/{id}/decline")
     Call<DonationRequestDto> declineRequest(@Path("id") String requestId);
+
+    // Notifications endpoints
+    @GET("v1/notifications")
+    Call<List<NotificationDto>> getNotifications();
+
+    @GET("v1/notifications/unread-count")
+    Call<UnreadCountDto> getUnreadCount();
+
+    @POST("v1/notifications/{id}/read")
+    Call<NotificationDto> markNotificationAsRead(@Path("id") String id);
+
+    @POST("v1/notifications/read-all")
+    Call<Map<String, Integer>> markAllNotificationsAsRead();
 }
