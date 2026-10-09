@@ -20,6 +20,7 @@ import com.goodwill.app.ui.listings.ListingDetailActivity;
 import com.goodwill.app.ui.listings.ListingsAdapter;
 import com.goodwill.app.ui.listings.ListingsViewModel;
 import com.goodwill.app.ui.profile.ProfileActivity;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -122,6 +123,31 @@ public class MainActivity extends AppCompatActivity {
                 viewModel.setType(null);
                 viewModel.setCategory("FURNITURE");
             }
+        });
+
+        binding.chipHostelFilter.setOnClickListener(v -> {
+            String[] hostelOptions = new String[] {
+                    "All Hostels",
+                    "Hostel Block A (Boys)",
+                    "Hostel Block B (Boys)",
+                    "Hostel Block C (Girls)",
+                    "Hostel Block D (Girls)",
+                    "Day Scholar / Off-Campus"
+            };
+
+            new MaterialAlertDialogBuilder(MainActivity.this)
+                    .setTitle("Filter by Campus Location")
+                    .setItems(hostelOptions, (dialog, which) -> {
+                        if (which == 0) {
+                            binding.chipHostelFilter.setText("📍 Hostels: All");
+                            viewModel.setHostelBlock(null);
+                        } else {
+                            String choice = hostelOptions[which];
+                            binding.chipHostelFilter.setText("📍 " + choice.replace("Hostel ", ""));
+                            viewModel.setHostelBlock(choice);
+                        }
+                    })
+                    .show();
         });
     }
 

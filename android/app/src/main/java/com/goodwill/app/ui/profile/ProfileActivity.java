@@ -58,6 +58,13 @@ public class ProfileActivity extends AppCompatActivity {
             }
 
             @Override
+            public void onEdit(ListingDto listing) {
+                Intent intent = new Intent(ProfileActivity.this, CreateListingActivity.class);
+                intent.putExtra(CreateListingActivity.EXTRA_EDIT_LISTING, listing);
+                startActivity(intent);
+            }
+
+            @Override
             public void onMarkSold(ListingDto listing) {
                 new MaterialAlertDialogBuilder(ProfileActivity.this)
                         .setTitle("Mark as Sold")

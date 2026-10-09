@@ -19,6 +19,7 @@ public class MyListingsAdapter extends ListAdapter<ListingDto, MyListingsAdapter
 
     public interface OnMyListingActionListener {
         void onListingClick(ListingDto listing);
+        void onEdit(ListingDto listing);
         void onMarkSold(ListingDto listing);
         void onMarkDonated(ListingDto listing);
         void onDelete(ListingDto listing);
@@ -91,10 +92,12 @@ public class MyListingsAdapter extends ListAdapter<ListingDto, MyListingsAdapter
 
             if ("ACTIVE".equalsIgnoreCase(status)) {
                 binding.tvStatusBadge.setBackground(ContextCompat.getDrawable(itemView.getContext(), R.drawable.bg_badge_donate));
+                binding.btnEdit.setVisibility(View.VISIBLE);
                 binding.btnMarkSold.setVisibility(item.isDonation() ? View.GONE : View.VISIBLE);
                 binding.btnMarkDonated.setVisibility(View.VISIBLE);
             } else {
                 binding.tvStatusBadge.setBackground(ContextCompat.getDrawable(itemView.getContext(), R.drawable.bg_badge_sold));
+                binding.btnEdit.setVisibility(View.GONE);
                 binding.btnMarkSold.setVisibility(View.GONE);
                 binding.btnMarkDonated.setVisibility(View.GONE);
             }
@@ -112,6 +115,12 @@ public class MyListingsAdapter extends ListAdapter<ListingDto, MyListingsAdapter
             }
 
             // Button listeners
+            binding.btnEdit.setOnClickListener(v -> {
+                if (listener != null) {
+                    listener.onEdit(item);
+                }
+            });
+
             binding.btnMarkSold.setOnClickListener(v -> {
                 if (listener != null) {
                     listener.onMarkSold(item);

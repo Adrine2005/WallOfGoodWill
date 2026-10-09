@@ -53,6 +53,7 @@ func SetupRouter(userService *users.Service, inviteService *invites.Service, lis
 			r.Use(auth.Middleware(verifier))
 			r.Post("/", listingsHandler.CreateListing)
 			r.Get("/my", listingsHandler.GetMyListings)
+			r.Patch("/{id}", listingsHandler.UpdateListing)
 			r.Put("/{id}/status", listingsHandler.UpdateListingStatus)
 			r.Delete("/{id}", listingsHandler.DeleteListing)
 		})

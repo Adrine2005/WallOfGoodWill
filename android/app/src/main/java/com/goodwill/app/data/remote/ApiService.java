@@ -2,6 +2,7 @@ package com.goodwill.app.data.remote;
 
 import com.goodwill.app.data.remote.dto.AuthResponse;
 import com.goodwill.app.data.remote.dto.CreateListingRequest;
+import com.goodwill.app.data.remote.dto.EditListingRequest;
 import com.goodwill.app.data.remote.dto.ListingDto;
 import com.goodwill.app.data.remote.dto.RegisterRequest;
 import com.goodwill.app.data.remote.dto.UpdateStatusRequest;
@@ -14,6 +15,7 @@ import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.DELETE;
 import retrofit2.http.GET;
+import retrofit2.http.PATCH;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
 import retrofit2.http.Path;
@@ -44,6 +46,12 @@ public interface ApiService {
 
     @POST("v1/listings")
     Call<ListingDto> createListing(@Body CreateListingRequest request);
+
+    @PATCH("v1/listings/{id}")
+    Call<ListingDto> editListing(
+            @Path("id") String id,
+            @Body EditListingRequest request
+    );
 
     @GET("v1/listings/{id}")
     Call<ListingDto> getListingDetail(@Path("id") String id);

@@ -205,3 +205,50 @@ func (h *ListingsHandler) UpdateListingStatus(w http.ResponseWriter, r *http.Req
 		"status":  string(status),
 	})
 }
+
+type UpdateListingRequest struct {
+	Title       string                 `json:"title"`
+	Description string                 `json:"description"`
+	Category    listings.ItemCategory  `json:"category"`
+	Price       float64                `json:"price"`
+	Condition   listings.ItemCondition `json:"condition"`
+}
+
+func (h *ListingsHandler) UpdateListing(w http.ResponseWriter, r *http.Request) {
+	claims, ok := auth.GetUserClaims(r.Context())
+	if !ok || claims.UID == "" {
+		writeError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	id := chi.URLParam(r, "id")
+	var req UpdateListingRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	params := listings.UpdateListingParams{
+		Title:       req.Title,
+		Description: req.Description,
+		Category:    req.Category,
+		Price:       req.Price,
+		Condition:   req.Condition,
+	}
+
+	updated, err := h.listings.UpdateListing(id, claims.UID, params)
+	if err != nil {
+		switch {
+		case errors.Is(err, listings.ErrListingNotFound):
+			writeError(w, http.StatusNotFound, "listing not found")
+		case errors.Is(err, listings.ErrUnauthorized):
+			writeError(w, http.StatusForbidden, "unauthorized: only the seller can edit this listing")
+		default:
+			writeError(w, http.StatusBadRequest, err.Error())
+		}
+		return
+	}
+
+	writeJSON(w, http.StatusOK, updated)
+}
+

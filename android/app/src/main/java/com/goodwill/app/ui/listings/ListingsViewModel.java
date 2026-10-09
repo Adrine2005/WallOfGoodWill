@@ -8,6 +8,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.goodwill.app.data.remote.dto.CreateListingRequest;
+import com.goodwill.app.data.remote.dto.EditListingRequest;
 import com.goodwill.app.data.remote.dto.ListingDto;
 import com.goodwill.app.data.repository.ListingsRepository;
 import com.goodwill.app.data.repository.RepositoryCallback;
@@ -23,6 +24,7 @@ public class ListingsViewModel extends AndroidViewModel {
     private final MutableLiveData<Boolean> isLoading = new MutableLiveData<>(false);
     private final MutableLiveData<String> errorMessage = new MutableLiveData<>(null);
     private final MutableLiveData<ListingDto> createSuccess = new MutableLiveData<>(null);
+    private final MutableLiveData<ListingDto> editSuccess = new MutableLiveData<>(null);
     private final MutableLiveData<ListingDto> selectedListing = new MutableLiveData<>(null);
 
     private String currentCategory = null;
@@ -49,6 +51,10 @@ public class ListingsViewModel extends AndroidViewModel {
 
     public LiveData<ListingDto> getCreateSuccess() {
         return createSuccess;
+    }
+
+    public LiveData<ListingDto> getEditSuccess() {
+        return editSuccess;
     }
 
     public LiveData<ListingDto> getSelectedListing() {
@@ -109,6 +115,26 @@ public class ListingsViewModel extends AndroidViewModel {
                 isLoading.setValue(false);
                 createSuccess.setValue(result);
                 loadFeed(); // Refresh home feed
+            }
+
+            @Override
+            public void onError(String message) {
+                isLoading.setValue(false);
+                errorMessage.setValue(message);
+            }
+        });
+    }
+
+    public void editListing(String id, EditListingRequest request) {
+        isLoading.setValue(true);
+        errorMessage.setValue(null);
+
+        repository.editListing(id, request, new RepositoryCallback<ListingDto>() {
+            @Override
+            public void onSuccess(ListingDto result) {
+                isLoading.setValue(false);
+                editSuccess.setValue(result);
+                loadFeed();
             }
 
             @Override

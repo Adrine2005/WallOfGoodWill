@@ -42,6 +42,7 @@ func setupListingsEnv() (http.Handler, *listings.Service, *users.Service, *auth.
 			r.Use(auth.Middleware(verifier))
 			r.Post("/", listingsHandler.CreateListing)
 			r.Get("/my", listingsHandler.GetMyListings)
+			r.Patch("/{id}", listingsHandler.UpdateListing)
 			r.Put("/{id}/status", listingsHandler.UpdateListingStatus)
 			r.Delete("/{id}", listingsHandler.DeleteListing)
 		})
@@ -295,4 +296,71 @@ func TestUpdateListingStatus(t *testing.T) {
 		t.Errorf("expected status %s, got %s", listings.StatusDonated, updatedItem2.Status)
 	}
 }
+
+func TestUpdateListing(t *testing.T) {
+	router, listingsService, _, _ := setupListingsEnv()
+
+	item, err := listingsService.CreateListing(
+		"student-seller-1",
+		"Sid",
+		"Block A",
+		"204",
+		"Old Mattress",
+		"Single bed mattress",
+		listings.CategoryFurniture,
+		listings.TypeSell,
+		800,
+		listings.ConditionFair,
+		nil,
+	)
+	if err != nil {
+		t.Fatalf("failed to create listing: %v", err)
+	}
+
+	// 1. Unauthorized attempt (different student)
+	editReqOther := map[string]interface{}{
+		"title": "Hacked Mattress",
+		"price": 100,
+	}
+	bodyOther, _ := json.Marshal(editReqOther)
+	reqOther := httptest.NewRequest(http.MethodPatch, "/v1/listings/"+item.ID, bytes.NewReader(bodyOther))
+	reqOther.Header.Set("Authorization", "Bearer mock-token-student-other")
+	recOther := httptest.NewRecorder()
+	router.ServeHTTP(recOther, reqOther)
+	if recOther.Code != http.StatusForbidden {
+		t.Errorf("expected 403 Forbidden for non-owner edit, got %d", recOther.Code)
+	}
+
+	// 2. Authorized edit by owner
+	editReq := map[string]interface{}{
+		"title":       "Clean Single Bed Mattress",
+		"description": "Used 1 term, thoroughly cleaned and sanitized",
+		"price":       650,
+		"condition":   "GOOD",
+	}
+	bodyAuth, _ := json.Marshal(editReq)
+	reqAuth := httptest.NewRequest(http.MethodPatch, "/v1/listings/"+item.ID, bytes.NewReader(bodyAuth))
+	reqAuth.Header.Set("Authorization", "Bearer mock-token-student-seller-1")
+	recAuth := httptest.NewRecorder()
+	router.ServeHTTP(recAuth, reqAuth)
+	if recAuth.Code != http.StatusOK {
+		t.Fatalf("expected 200 OK for owner edit, got %d: %s", recAuth.Code, recAuth.Body.String())
+	}
+
+	// Verify listing in service
+	updated, err := listingsService.GetListing(item.ID)
+	if err != nil {
+		t.Fatalf("failed to get listing: %v", err)
+	}
+	if updated.Title != "Clean Single Bed Mattress" {
+		t.Errorf("expected title to be updated, got %s", updated.Title)
+	}
+	if updated.Price != 650 {
+		t.Errorf("expected price to be 650, got %f", updated.Price)
+	}
+	if updated.Condition != listings.ConditionGood {
+		t.Errorf("expected condition GOOD, got %s", updated.Condition)
+	}
+}
+
 

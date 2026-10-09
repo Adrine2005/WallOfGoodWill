@@ -118,6 +118,13 @@
                     android:checked="true" />
 
                 <com.google.android.material.chip.Chip
+                    android:id="@+id/chipHostelFilter"
+                    style="@style/Widget.Material3.Chip.Assist"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="📍 Hostels: All" />
+
+                <com.google.android.material.chip.Chip
                     android:id="@+id/chipDonate"
                     style="@style/Widget.Material3.Chip.Filter"
                     android:layout_width="wrap_content"

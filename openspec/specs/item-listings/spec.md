@@ -54,3 +54,14 @@ The system SHALL allow the seller to view their own listings, mark them as compl
 #### Scenario: Seller marks item as donated
 - **WHEN** authenticated seller submits a status update specifying status DONATED
 - **THEN** the system updates the listing status to DONATED and records completion
+
+### Requirement: Listing Update Management
+The backend service and client application SHALL allow authenticated sellers to edit the title, description, price, condition, or category of their active listings.
+
+#### Scenario: Seller edits listing attributes
+- **WHEN** an authenticated seller submits an update request with valid changes to title, description, or price
+- **THEN** the system updates the listing record and persists updated timestamp
+
+#### Scenario: Unauthorized edit attempt rejected
+- **WHEN** a user attempts to edit a listing created by another student
+- **THEN** the system rejects the request with HTTP 403 Forbidden

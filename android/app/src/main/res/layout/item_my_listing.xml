@@ -126,10 +126,23 @@
             android:gravity="center_vertical|end">
 
             <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnEdit"
+                style="@style/Widget.Material3.Button.OutlinedButton.Dense"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp"
+                android:text="Edit"
+                android:textSize="12sp"
+                app:strokeColor="@color/outline"
+                android:textColor="@color/primary" />
+
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnMarkSold"
                 style="@style/Widget.Material3.Button.OutlinedButton.Dense"
                 android:layout_width="wrap_content"
                 android:layout_height="36dp"
+                android:layout_marginStart="6dp"
                 android:paddingStart="10dp"
                 android:paddingEnd="10dp"
                 android:text="Sold"

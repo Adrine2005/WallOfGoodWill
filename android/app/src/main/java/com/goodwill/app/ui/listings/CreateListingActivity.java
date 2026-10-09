@@ -11,17 +11,23 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.goodwill.app.R;
 import com.goodwill.app.data.remote.dto.CreateListingRequest;
+import com.goodwill.app.data.remote.dto.EditListingRequest;
+import com.goodwill.app.data.remote.dto.ListingDto;
 import com.goodwill.app.databinding.ActivityCreateListingBinding;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 public class CreateListingActivity extends AppCompatActivity {
+
+    public static final String EXTRA_EDIT_LISTING = "extra_edit_listing";
 
     private ActivityCreateListingBinding binding;
     private ListingsViewModel viewModel;
     private boolean isDonation = true;
+    private ListingDto editListingItem = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,10 +42,49 @@ public class CreateListingActivity extends AppCompatActivity {
         setupTypeToggle();
         setupListeners();
         setupObservers();
+        initEditModeIfPresent();
     }
 
     private void setupToolbar() {
         binding.toolbar.setNavigationOnClickListener(v -> finish());
+    }
+
+    private void initEditModeIfPresent() {
+        if (getIntent() != null && getIntent().hasExtra(EXTRA_EDIT_LISTING)) {
+            editListingItem = (ListingDto) getIntent().getSerializableExtra(EXTRA_EDIT_LISTING);
+            if (editListingItem != null) {
+                binding.toolbar.setTitle("Edit Listing");
+                binding.btnSubmitPost.setText("Save Changes");
+
+                binding.etTitle.setText(editListingItem.getTitle());
+                binding.etDescription.setText(editListingItem.getDescription());
+                if (editListingItem.getCategory() != null) {
+                    binding.actvCategory.setText(editListingItem.getCategory(), false);
+                }
+                if (editListingItem.getCondition() != null) {
+                    binding.actvCondition.setText(editListingItem.getCondition().replace("_", " "), false);
+                }
+
+                if (!editListingItem.isDonation()) {
+                    isDonation = false;
+                    binding.toggleGroupType.check(R.id.btnTypeSell);
+                    binding.tilPrice.setVisibility(View.VISIBLE);
+                    binding.etPrice.setText(String.format(Locale.US, "%.0f", editListingItem.getPrice()));
+                } else {
+                    isDonation = true;
+                    binding.toggleGroupType.check(R.id.btnTypeDonate);
+                    binding.tilPrice.setVisibility(View.GONE);
+                }
+
+                // Prevent type change during edit
+                binding.btnTypeDonate.setEnabled(false);
+                binding.btnTypeSell.setEnabled(false);
+
+                if (editListingItem.getPhotos() != null && !editListingItem.getPhotos().isEmpty()) {
+                    binding.etPhotoUrl.setText(editListingItem.getPhotos().get(0));
+                }
+            }
+        }
     }
 
     private void setupDropdowns() {
@@ -96,6 +141,13 @@ public class CreateListingActivity extends AppCompatActivity {
         viewModel.getCreateSuccess().observe(this, createdItem -> {
             if (createdItem != null) {
                 Toast.makeText(this, "Item posted to campus successfully!", Toast.LENGTH_SHORT).show();
+                finish();
+            }
+        });
+
+        viewModel.getEditSuccess().observe(this, updatedItem -> {
+            if (updatedItem != null) {
+                Toast.makeText(this, "Listing updated successfully!", Toast.LENGTH_SHORT).show();
                 finish();
             }
         });
@@ -156,13 +208,26 @@ public class CreateListingActivity extends AppCompatActivity {
             return;
         }
 
+        String formattedCategory = category.toUpperCase().replace(" ", "_");
+        String formattedCondition = condition.toUpperCase().replace(" ", "_");
+
+        if (editListingItem != null) {
+            EditListingRequest editReq = new EditListingRequest(
+                    title,
+                    desc,
+                    formattedCategory,
+                    price,
+                    formattedCondition
+            );
+            viewModel.editListing(editListingItem.getId(), editReq);
+            return;
+        }
+
         List<String> photos = new ArrayList<>();
         if (!TextUtils.isEmpty(photoUrl)) {
             photos.add(photoUrl);
         }
 
-        String formattedCategory = category.toUpperCase().replace(" ", "_");
-        String formattedCondition = condition.toUpperCase().replace(" ", "_");
         String itemType = isDonation ? "DONATE" : "SELL";
 
         CreateListingRequest req = new CreateListingRequest(

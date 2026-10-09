@@ -6,6 +6,7 @@ import com.goodwill.app.data.local.SessionManager;
 import com.goodwill.app.data.remote.ApiClient;
 import com.goodwill.app.data.remote.ApiService;
 import com.goodwill.app.data.remote.dto.CreateListingRequest;
+import com.goodwill.app.data.remote.dto.EditListingRequest;
 import com.goodwill.app.data.remote.dto.ListingDto;
 import com.goodwill.app.data.remote.dto.UpdateStatusRequest;
 import com.google.gson.Gson;
@@ -54,6 +55,24 @@ public class ListingsRepository {
 
     public void createListing(CreateListingRequest request, RepositoryCallback<ListingDto> callback) {
         apiService.createListing(request).enqueue(new Callback<ListingDto>() {
+            @Override
+            public void onResponse(Call<ListingDto> call, Response<ListingDto> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    callback.onSuccess(response.body());
+                } else {
+                    callback.onError(extractErrorMessage(response));
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ListingDto> call, Throwable t) {
+                callback.onError(t.getMessage() != null ? t.getMessage() : "Network error");
+            }
+        });
+    }
+
+    public void editListing(String id, EditListingRequest request, RepositoryCallback<ListingDto> callback) {
+        apiService.editListing(id, request).enqueue(new Callback<ListingDto>() {
             @Override
             public void onResponse(Call<ListingDto> call, Response<ListingDto> response) {
                 if (response.isSuccessful() && response.body() != null) {

@@ -336,3 +336,45 @@ func (s *Service) UpdateStatus(id string, sellerID string, status ListingStatus)
 	item.UpdatedAt = time.Now().UTC()
 	return nil
 }
+
+type UpdateListingParams struct {
+	Title       string
+	Description string
+	Category    ItemCategory
+	Price       float64
+	Condition   ItemCondition
+}
+
+func (s *Service) UpdateListing(id string, sellerID string, params UpdateListingParams) (*Listing, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	item, exists := s.listings[strings.TrimSpace(id)]
+	if !exists || item.Status == StatusDeleted {
+		return nil, ErrListingNotFound
+	}
+
+	if item.SellerID != strings.TrimSpace(sellerID) {
+		return nil, ErrUnauthorized
+	}
+
+	if strings.TrimSpace(params.Title) != "" {
+		item.Title = strings.TrimSpace(params.Title)
+	}
+	if strings.TrimSpace(params.Description) != "" {
+		item.Description = strings.TrimSpace(params.Description)
+	}
+	if params.Category != "" {
+		item.Category = params.Category
+	}
+	if params.Condition != "" {
+		item.Condition = params.Condition
+	}
+	if item.Type == TypeSell && params.Price > 0 {
+		item.Price = params.Price
+	}
+
+	item.UpdatedAt = time.Now().UTC()
+	return item, nil
+}
+
