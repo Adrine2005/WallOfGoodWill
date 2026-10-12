@@ -127,7 +127,7 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnEdit"
-                style="@style/Widget.Material3.Button.OutlinedButton.Dense"
+                style="@style/Widget.Material3.Button.OutlinedButton"
                 android:layout_width="wrap_content"
                 android:layout_height="36dp"
                 android:paddingStart="10dp"
@@ -139,7 +139,7 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnMarkSold"
-                style="@style/Widget.Material3.Button.OutlinedButton.Dense"
+                style="@style/Widget.Material3.Button.OutlinedButton"
                 android:layout_width="wrap_content"
                 android:layout_height="36dp"
                 android:layout_marginStart="6dp"
@@ -152,7 +152,7 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnMarkDonated"
-                style="@style/Widget.Material3.Button.OutlinedButton.Dense"
+                style="@style/Widget.Material3.Button.OutlinedButton"
                 android:layout_width="wrap_content"
                 android:layout_height="36dp"
                 android:layout_marginStart="6dp"
@@ -165,7 +165,7 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnDelete"
-                style="@style/Widget.Material3.Button.TextButton.Dialog"
+                style="@style/Widget.Material3.Button.TextButton"
                 android:layout_width="wrap_content"
                 android:layout_height="36dp"
                 android:layout_marginStart="6dp"

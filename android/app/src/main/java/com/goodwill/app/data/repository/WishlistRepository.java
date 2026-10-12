@@ -84,7 +84,7 @@ public class WishlistRepository {
             }
 
             @Override
-            public void onFailure(Call<WishlistItemDto>> call, Throwable t) {
+            public void onFailure(Call<WishlistItemDto> call, Throwable t) {
                 callback.onError(t.getMessage() != null ? t.getMessage() : "Network error");
             }
         });

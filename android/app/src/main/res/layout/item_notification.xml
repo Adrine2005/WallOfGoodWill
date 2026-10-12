@@ -82,7 +82,7 @@
                 android:textSize="13sp"
                 android:lineSpacingExtra="2dp"
                 android:textColor="@color/text_secondary"
-                tools:text="Your request for \"Engineering Mathematics Vol 1\" was accepted by Siddharth Rao." />
+                tools:text="Your request for 'Engineering Mathematics Vol 1' was accepted by Siddharth Rao." />
 
             <TextView
                 android:id="@+id/tvNotificationTime"

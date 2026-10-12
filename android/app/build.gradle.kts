@@ -48,6 +48,7 @@ dependencies {
     implementation(libs.okhttp.logging)
     implementation(libs.play.services.code.scanner)
     implementation(libs.glide)
+    implementation(libs.swiperefreshlayout)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
