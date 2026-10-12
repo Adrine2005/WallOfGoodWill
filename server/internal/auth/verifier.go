@@ -32,9 +32,42 @@ type MockVerifier struct {
 }
 
 func NewMockVerifier() *MockVerifier {
-	return &MockVerifier{
+	m := &MockVerifier{
 		claims: make(map[string]*UserClaims),
 	}
+
+	// Pre-seed claims for default accounts
+	adminClaims := &UserClaims{
+		UID:      "admin-101",
+		Email:    "admin@campus.edu",
+		Role:     "admin",
+		Verified: true,
+		Claims:   map[string]interface{}{"verified": true, "role": "admin"},
+	}
+	m.claims["admin-101"] = adminClaims
+	m.claims["mock-token-admin-101"] = adminClaims
+
+	studentClaims := &UserClaims{
+		UID:      "student-101",
+		Email:    "student@campus.edu",
+		Role:     "student",
+		Verified: true,
+		Claims:   map[string]interface{}{"verified": true, "role": "student"},
+	}
+	m.claims["student-101"] = studentClaims
+	m.claims["mock-token-student-101"] = studentClaims
+
+	juniorClaims := &UserClaims{
+		UID:      "junior-102",
+		Email:    "junior@campus.edu",
+		Role:     "student",
+		Verified: false,
+		Claims:   map[string]interface{}{"verified": false, "role": "student"},
+	}
+	m.claims["junior-102"] = juniorClaims
+	m.claims["mock-token-junior-102"] = juniorClaims
+
+	return m
 }
 
 func (m *MockVerifier) VerifyToken(ctx context.Context, token string) (*UserClaims, error) {

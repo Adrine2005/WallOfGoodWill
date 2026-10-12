@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -287,5 +288,62 @@ func TestAdminGenerateAndListQR(t *testing.T) {
 	_ = json.NewDecoder(listRec.Body).Decode(&list)
 	if len(list) != 1 || list[0].Code != createdInvite.Code {
 		t.Errorf("unexpected list response: %+v", list)
+	}
+}
+
+func TestLogin_AdminAndStudent(t *testing.T) {
+	userService := users.NewService()
+	inviteService := invites.NewService()
+	verifier := auth.NewMockVerifier()
+	authHandler := handlers.NewAuthHandler(userService, inviteService, verifier)
+
+	// 1. Admin login success
+	adminPayload := `{"email":"admin@campus.edu","password":"admin123"}`
+	req := httptest.NewRequest(http.MethodPost, "/v1/auth/login", strings.NewReader(adminPayload))
+	rec := httptest.NewRecorder()
+	authHandler.Login(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200 for admin login, got %d: %s", rec.Code, rec.Body.String())
+	}
+	var adminResp handlers.LoginResponse
+	_ = json.NewDecoder(rec.Body).Decode(&adminResp)
+	if !adminResp.Verified || adminResp.Role != "admin" {
+		t.Errorf("expected admin to be verified with admin role, got verified=%v role=%s", adminResp.Verified, adminResp.Role)
+	}
+
+	// 2. Student login success
+	studentPayload := `{"email":"student@campus.edu","password":"student123"}`
+	req = httptest.NewRequest(http.MethodPost, "/v1/auth/login", strings.NewReader(studentPayload))
+	rec = httptest.NewRecorder()
+	authHandler.Login(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200 for student login, got %d: %s", rec.Code, rec.Body.String())
+	}
+	var studentResp handlers.LoginResponse
+	_ = json.NewDecoder(rec.Body).Decode(&studentResp)
+	if !studentResp.Verified || studentResp.Role != "student" {
+		t.Errorf("expected student to be verified with student role, got verified=%v role=%s", studentResp.Verified, studentResp.Role)
+	}
+
+	// 3. Invalid password fails with 401
+	badPassPayload := `{"email":"student@campus.edu","password":"wrongpassword"}`
+	req = httptest.NewRequest(http.MethodPost, "/v1/auth/login", strings.NewReader(badPassPayload))
+	rec = httptest.NewRecorder()
+	authHandler.Login(rec, req)
+
+	if rec.Code != http.StatusUnauthorized {
+		t.Errorf("expected 401 for wrong password, got %d", rec.Code)
+	}
+
+	// 4. Non-existent email fails with 401
+	nonExistentPayload := `{"email":"ghost@campus.edu","password":"password123"}`
+	req = httptest.NewRequest(http.MethodPost, "/v1/auth/login", strings.NewReader(nonExistentPayload))
+	rec = httptest.NewRecorder()
+	authHandler.Login(rec, req)
+
+	if rec.Code != http.StatusUnauthorized {
+		t.Errorf("expected 401 for non-existent user, got %d", rec.Code)
 	}
 }

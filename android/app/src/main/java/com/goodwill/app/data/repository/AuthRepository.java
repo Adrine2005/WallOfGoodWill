@@ -6,6 +6,7 @@ import com.goodwill.app.data.local.SessionManager;
 import com.goodwill.app.data.remote.ApiClient;
 import com.goodwill.app.data.remote.ApiService;
 import com.goodwill.app.data.remote.dto.AuthResponse;
+import com.goodwill.app.data.remote.dto.LoginRequest;
 import com.goodwill.app.data.remote.dto.RegisterRequest;
 import com.goodwill.app.data.remote.dto.UserDto;
 import com.goodwill.app.data.remote.dto.VerifyQrRequest;
@@ -61,6 +62,7 @@ public class AuthRepository {
                 safeUid,
                 name,
                 email,
+                password,
                 hostelBlock,
                 roomNo,
                 phone,
@@ -102,60 +104,26 @@ public class AuthRepository {
             return;
         }
 
-        String safeUid = "user-" + Math.abs(email.trim().toLowerCase().hashCode());
-        String token = "mock-token-" + safeUid;
-
-        // If local user exists with matching email
-        UserDto localUser = sessionManager.getUser();
-        if (localUser != null && email.equalsIgnoreCase(localUser.getEmail())) {
-            sessionManager.saveSession(token, localUser);
-            callback.onSuccess(localUser);
-            return;
-        }
-
-        // Set token and query backend for existing user profile
-        sessionManager.saveSession(token, null);
-        apiService.getProfile().enqueue(new Callback<UserDto>() {
+        LoginRequest loginRequest = new LoginRequest(email.trim(), password.trim());
+        apiService.login(loginRequest).enqueue(new Callback<AuthResponse>() {
             @Override
-            public void onResponse(Call<UserDto> call, Response<UserDto> response) {
+            public void onResponse(Call<AuthResponse> call, Response<AuthResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    UserDto user = response.body();
-                    sessionManager.saveSession(token, user);
-                    callback.onSuccess(user);
+                    AuthResponse authResponse = response.body();
+                    String token = authResponse.getToken() != null ? authResponse.getToken() : "mock-token-" + authResponse.getUser().getUid();
+                    sessionManager.saveSession(token, authResponse.getUser());
+                    callback.onSuccess(authResponse.getUser());
                 } else {
-                    // Profile not found on backend yet; create a mock student profile in dev mode
-                    UserDto devUser = new UserDto(
-                            safeUid,
-                            email.split("@")[0],
-                            email,
-                            "Block A",
-                            "101",
-                            "",
-                            "student",
-                            false,
-                            ""
-                    );
-                    sessionManager.saveSession(token, devUser);
-                    callback.onSuccess(devUser);
+                    String errorMsg = extractErrorMessage(response);
+                    sessionManager.clearSession();
+                    callback.onError(errorMsg);
                 }
             }
 
             @Override
-            public void onFailure(Call<UserDto> call, Throwable t) {
-                // If backend offline, create local dev session
-                UserDto devUser = new UserDto(
-                        safeUid,
-                        email.split("@")[0],
-                        email,
-                        "Block A",
-                        "101",
-                        "",
-                        "student",
-                        false,
-                        ""
-                );
-                sessionManager.saveSession(token, devUser);
-                callback.onSuccess(devUser);
+            public void onFailure(Call<AuthResponse> call, Throwable t) {
+                sessionManager.clearSession();
+                callback.onError(t.getMessage() != null ? t.getMessage() : "Network error. Please verify server connection.");
             }
         });
     }

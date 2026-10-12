@@ -38,6 +38,31 @@ func NewService() *Service {
 	}
 }
 
+func (s *Service) SeedDefaultInvites() {
+	now := time.Now().UTC()
+	expiry := now.Add(365 * 24 * time.Hour) // 1 year
+
+	s.invites["GW-NOTICEBOARD-A"] = &Invite{
+		Code:      "GW-NOTICEBOARD-A",
+		Label:     "Hostel Block A Main Notice Board",
+		CreatedAt: now,
+		ExpiresAt: expiry,
+		MaxUses:   1000,
+		UsedCount: 0,
+		IsActive:  true,
+	}
+
+	s.invites["GW-31D63A7C"] = &Invite{
+		Code:      "GW-31D63A7C",
+		Label:     "Campus Main Notice Board Poster",
+		CreatedAt: now,
+		ExpiresAt: expiry,
+		MaxUses:   1000,
+		UsedCount: 0,
+		IsActive:  true,
+	}
+}
+
 // GenerateCode creates a random unique campus code like "GW-A9B4C2"
 func generateCode() (string, error) {
 	bytes := make([]byte, 4)

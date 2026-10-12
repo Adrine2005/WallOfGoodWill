@@ -10,6 +10,7 @@ import com.goodwill.app.data.remote.dto.CreateWishlistRequest;
 import com.goodwill.app.data.remote.dto.DonationRequestDto;
 import com.goodwill.app.data.remote.dto.EditListingRequest;
 import com.goodwill.app.data.remote.dto.ListingDto;
+import com.goodwill.app.data.remote.dto.LoginRequest;
 import com.goodwill.app.data.remote.dto.NotificationDto;
 import com.goodwill.app.data.remote.dto.RegisterRequest;
 import com.goodwill.app.data.remote.dto.SendMessageRequest;
@@ -39,6 +40,9 @@ public interface ApiService {
 
     @POST("v1/auth/register")
     Call<AuthResponse> register(@Body RegisterRequest request);
+
+    @POST("v1/auth/login")
+    Call<AuthResponse> login(@Body LoginRequest request);
 
     @POST("v1/auth/verify-qr")
     Call<AuthResponse> verifyQr(@Body VerifyQrRequest request);

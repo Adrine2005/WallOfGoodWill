@@ -44,6 +44,7 @@ func SetupRouter(userService *users.Service, inviteService *invites.Service, lis
 
 	r.Route("/v1/auth", func(r chi.Router) {
 		r.Post("/register", authHandler.Register)
+		r.Post("/login", authHandler.Login)
 
 		r.Group(func(r chi.Router) {
 			r.Use(auth.Middleware(verifier))
@@ -122,6 +123,7 @@ func main() {
 
 	userService := users.NewService()
 	inviteService := invites.NewService()
+	inviteService.SeedDefaultInvites()
 	listingsService := listings.NewService()
 	notifService := notifications.NewService()
 	requestsService := requests.NewService(listingsService, userService, notifService)

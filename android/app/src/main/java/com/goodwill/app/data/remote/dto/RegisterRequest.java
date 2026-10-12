@@ -13,6 +13,9 @@ public class RegisterRequest {
     @SerializedName("email")
     private String email;
 
+    @SerializedName("password")
+    private String password;
+
     @SerializedName("hostelBlock")
     private String hostelBlock;
 
@@ -25,10 +28,11 @@ public class RegisterRequest {
     @SerializedName("inviteCode")
     private String inviteCode;
 
-    public RegisterRequest(String uid, String name, String email, String hostelBlock, String roomNo, String phone, String inviteCode) {
+    public RegisterRequest(String uid, String name, String email, String password, String hostelBlock, String roomNo, String phone, String inviteCode) {
         this.uid = uid;
         this.name = name;
         this.email = email;
+        this.password = password;
         this.hostelBlock = hostelBlock;
         this.roomNo = roomNo;
         this.phone = phone;
@@ -49,6 +53,10 @@ public class RegisterRequest {
 
     public String getEmail() {
         return email;
+    }
+
+    public String getPassword() {
+        return password;
     }
 
     public String getHostelBlock() {

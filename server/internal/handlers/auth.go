@@ -29,10 +29,24 @@ type RegisterRequest struct {
 	UID         string `json:"uid,omitempty"`
 	Name        string `json:"name"`
 	Email       string `json:"email"`
+	Password    string `json:"password,omitempty"`
 	HostelBlock string `json:"hostelBlock"`
 	RoomNo      string `json:"roomNo"`
 	Phone       string `json:"phone,omitempty"`
 	InviteCode  string `json:"inviteCode,omitempty"`
+}
+
+type LoginRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type LoginResponse struct {
+	Token    string      `json:"token"`
+	Verified bool        `json:"verified"`
+	Role     string      `json:"role"`
+	Message  string      `json:"message"`
+	User     *users.User `json:"user"`
 }
 
 type VerifyQRRequest struct {
@@ -40,6 +54,7 @@ type VerifyQRRequest struct {
 }
 
 type AuthResponse struct {
+	Token    string      `json:"token,omitempty"`
 	Verified bool        `json:"verified"`
 	Message  string      `json:"message"`
 	User     *users.User `json:"user,omitempty"`
@@ -104,10 +119,17 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Check if an account already exists with this email
+	if existing, _ := h.users.GetUserByEmail(req.Email); existing != nil {
+		writeError(w, http.StatusConflict, "An account with this email already exists. Please login instead.")
+		return
+	}
+
 	user := &users.User{
 		UID:         uid,
 		Name:        req.Name,
 		Email:       req.Email,
+		Password:    strings.TrimSpace(req.Password),
 		HostelBlock: req.HostelBlock,
 		RoomNo:      req.RoomNo,
 		Phone:       strings.TrimSpace(req.Phone),
@@ -136,17 +158,69 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 		user.Verified = true
 		user.VerifiedViaCode = invite.Code
-		_ = h.verifier.SetUserClaims(r.Context(), user.UID, map[string]interface{}{
-			"verified": true,
-			"role":     user.Role,
-		})
 	}
+
+	_ = h.verifier.SetUserClaims(r.Context(), user.UID, map[string]interface{}{
+		"verified": user.Verified,
+		"role":     user.Role,
+		"email":    user.Email,
+	})
 
 	h.users.SaveUser(user)
 
+	token := "mock-token-" + user.UID
 	writeJSON(w, http.StatusCreated, AuthResponse{
+		Token:    token,
 		Verified: user.Verified,
 		Message:  "user registered successfully",
+		User:     user,
+	})
+}
+
+// Login authenticates an existing user or admin by email and password
+func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
+	var req LoginRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request payload")
+		return
+	}
+
+	req.Email = strings.TrimSpace(req.Email)
+	req.Password = strings.TrimSpace(req.Password)
+
+	if req.Email == "" {
+		writeError(w, http.StatusBadRequest, "email is required")
+		return
+	}
+	if req.Password == "" {
+		writeError(w, http.StatusBadRequest, "password is required")
+		return
+	}
+
+	user, err := h.users.GetUserByEmail(req.Email)
+	if err != nil {
+		writeError(w, http.StatusUnauthorized, "Account not found with this email. Please register first.")
+		return
+	}
+
+	// Validate password if user has one set
+	if user.Password != "" && user.Password != req.Password {
+		writeError(w, http.StatusUnauthorized, "Invalid password. Please check your credentials.")
+		return
+	}
+
+	token := "mock-token-" + user.UID
+	_ = h.verifier.SetUserClaims(r.Context(), user.UID, map[string]interface{}{
+		"verified": user.Verified,
+		"role":     user.Role,
+		"email":    user.Email,
+	})
+
+	writeJSON(w, http.StatusOK, LoginResponse{
+		Token:    token,
+		Verified: user.Verified,
+		Role:     user.Role,
+		Message:  "login successful",
 		User:     user,
 	})
 }
