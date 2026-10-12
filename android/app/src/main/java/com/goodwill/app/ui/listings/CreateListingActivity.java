@@ -1,20 +1,32 @@
 package com.goodwill.app.ui.listings;
 
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.bumptech.glide.Glide;
 import com.goodwill.app.R;
+import com.goodwill.app.data.remote.ApiClient;
 import com.goodwill.app.data.remote.dto.CreateListingRequest;
 import com.goodwill.app.data.remote.dto.EditListingRequest;
 import com.goodwill.app.data.remote.dto.ListingDto;
+import com.goodwill.app.data.remote.dto.UploadResponseDto;
+import com.goodwill.app.data.repository.RepositoryCallback;
 import com.goodwill.app.databinding.ActivityCreateListingBinding;
+import com.goodwill.app.databinding.ItemUploadPhotoBinding;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -23,11 +35,40 @@ import java.util.Locale;
 public class CreateListingActivity extends AppCompatActivity {
 
     public static final String EXTRA_EDIT_LISTING = "extra_edit_listing";
+    public static final int MAX_PHOTOS = 5;
+
+    private static class UploadedPhoto {
+        String localUriOrUrl;
+        String serverUrl;
+        boolean isUploading;
+        boolean isError;
+
+        UploadedPhoto(String localUriOrUrl, String serverUrl, boolean isUploading) {
+            this.localUriOrUrl = localUriOrUrl;
+            this.serverUrl = serverUrl;
+            this.isUploading = isUploading;
+            this.isError = false;
+        }
+    }
 
     private ActivityCreateListingBinding binding;
     private ListingsViewModel viewModel;
     private boolean isDonation = true;
     private ListingDto editListingItem = null;
+    private final List<UploadedPhoto> photoList = new ArrayList<>();
+
+    private final ActivityResultLauncher<String> pickMultipleImagesLauncher =
+            registerForActivityResult(new ActivityResultContracts.GetMultipleContents(), uris -> {
+                if (uris != null && !uris.isEmpty()) {
+                    for (Uri uri : uris) {
+                        if (photoList.size() >= MAX_PHOTOS) {
+                            Toast.makeText(this, "Maximum " + MAX_PHOTOS + " photos allowed", Toast.LENGTH_SHORT).show();
+                            break;
+                        }
+                        addAndUploadImageUri(uri);
+                    }
+                }
+            });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,6 +84,7 @@ public class CreateListingActivity extends AppCompatActivity {
         setupListeners();
         setupObservers();
         initEditModeIfPresent();
+        renderPhotoThumbnails();
     }
 
     private void setupToolbar() {
@@ -81,7 +123,12 @@ public class CreateListingActivity extends AppCompatActivity {
                 binding.btnTypeSell.setEnabled(false);
 
                 if (editListingItem.getPhotos() != null && !editListingItem.getPhotos().isEmpty()) {
-                    binding.etPhotoUrl.setText(editListingItem.getPhotos().get(0));
+                    for (String photoUrl : editListingItem.getPhotos()) {
+                        if (photoUrl != null && !photoUrl.trim().isEmpty()) {
+                            photoList.add(new UploadedPhoto(photoUrl, photoUrl, false));
+                        }
+                    }
+                    renderPhotoThumbnails();
                 }
             }
         }
@@ -122,30 +169,151 @@ public class CreateListingActivity extends AppCompatActivity {
     private void setupListeners() {
         binding.btnSubmitPost.setOnClickListener(v -> attemptSubmit());
 
+        binding.btnAddPhotoCard.setOnClickListener(v -> {
+            if (photoList.size() >= MAX_PHOTOS) {
+                Toast.makeText(this, "Maximum " + MAX_PHOTOS + " photos allowed", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            pickMultipleImagesLauncher.launch("image/*");
+        });
+
         binding.chipPresetBooks.setOnClickListener(v -> {
-            binding.etPhotoUrl.setText("https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=500");
+            addPresetPhoto("https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=500");
             binding.actvCategory.setText("Books", false);
         });
         binding.chipPresetKettle.setOnClickListener(v -> {
-            binding.etPhotoUrl.setText("https://images.unsplash.com/photo-1594213114663-ddf3f2a08126?w=500");
+            addPresetPhoto("https://images.unsplash.com/photo-1594213114663-ddf3f2a08126?w=500");
             binding.actvCategory.setText("Kitchenware", false);
         });
         binding.chipPresetCycle.setOnClickListener(v -> {
-            binding.etPhotoUrl.setText("https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=500");
+            addPresetPhoto("https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=500");
             binding.actvCategory.setText("Cycles", false);
         });
         binding.chipPresetLamp.setOnClickListener(v -> {
-            binding.etPhotoUrl.setText("https://images.unsplash.com/photo-1534353436294-0dbd4bdac845?w=500");
+            addPresetPhoto("https://images.unsplash.com/photo-1534353436294-0dbd4bdac845?w=500");
             binding.actvCategory.setText("Electronics", false);
         });
         binding.chipPresetDrafter.setOnClickListener(v -> {
-            binding.etPhotoUrl.setText("https://images.unsplash.com/photo-1585776245991-cf89dd7fc73a?w=500");
+            addPresetPhoto("https://images.unsplash.com/photo-1585776245991-cf89dd7fc73a?w=500");
             binding.actvCategory.setText("Stationery", false);
         });
         binding.chipPresetDesk.setOnClickListener(v -> {
-            binding.etPhotoUrl.setText("https://images.unsplash.com/photo-1518455027359-f3f8164ba6bd?w=500");
+            addPresetPhoto("https://images.unsplash.com/photo-1518455027359-f3f8164ba6bd?w=500");
             binding.actvCategory.setText("Furniture", false);
         });
+    }
+
+    private void addPresetPhoto(String url) {
+        if (photoList.size() >= MAX_PHOTOS) {
+            Toast.makeText(this, "Maximum " + MAX_PHOTOS + " photos allowed", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        photoList.add(new UploadedPhoto(url, url, false));
+        renderPhotoThumbnails();
+    }
+
+    private void addAndUploadImageUri(Uri uri) {
+        UploadedPhoto photo = new UploadedPhoto(uri.toString(), null, true);
+        photoList.add(photo);
+        renderPhotoThumbnails();
+
+        File tempFile = copyUriToTempFile(uri);
+        if (tempFile == null) {
+            photo.isUploading = false;
+            photo.isError = true;
+            renderPhotoThumbnails();
+            Toast.makeText(this, "Failed to read selected image", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        viewModel.uploadImage(tempFile, new RepositoryCallback<UploadResponseDto>() {
+            @Override
+            public void onSuccess(UploadResponseDto result) {
+                photo.isUploading = false;
+                photo.serverUrl = result.getUrl();
+                renderPhotoThumbnails();
+                // Clean up temp file
+                tempFile.delete();
+            }
+
+            @Override
+            public void onError(String message) {
+                photo.isUploading = false;
+                photo.isError = true;
+                renderPhotoThumbnails();
+                tempFile.delete();
+                Toast.makeText(CreateListingActivity.this, "Upload failed: " + message, Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private File copyUriToTempFile(Uri uri) {
+        try (InputStream in = getContentResolver().openInputStream(uri)) {
+            if (in == null) return null;
+            File tempFile = new File(getCacheDir(), "upload_" + System.currentTimeMillis() + "_" + (int)(Math.random() * 1000) + ".jpg");
+            try (OutputStream out = new FileOutputStream(tempFile)) {
+                byte[] buffer = new byte[8192];
+                int read;
+                while ((read = in.read(buffer)) != -1) {
+                    out.write(buffer, 0, read);
+                }
+                out.flush();
+            }
+            return tempFile;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private void renderPhotoThumbnails() {
+        binding.tvPhotoCount.setText(photoList.size() + " / " + MAX_PHOTOS);
+        binding.btnAddPhotoCard.setVisibility(photoList.size() >= MAX_PHOTOS ? View.GONE : View.VISIBLE);
+        binding.llPhotoThumbnails.removeAllViews();
+
+        for (int i = 0; i < photoList.size(); i++) {
+            final int index = i;
+            UploadedPhoto photo = photoList.get(i);
+
+            ItemUploadPhotoBinding itemBinding = ItemUploadPhotoBinding.inflate(
+                    getLayoutInflater(),
+                    binding.llPhotoThumbnails,
+                    false
+            );
+
+            // Cover badge on first image
+            itemBinding.tvCoverBadge.setVisibility(index == 0 ? View.VISIBLE : View.GONE);
+
+            // Upload progress overlay
+            itemBinding.flUploadingOverlay.setVisibility(photo.isUploading ? View.VISIBLE : View.GONE);
+
+            // Load preview with Glide
+            String previewUrl = photo.localUriOrUrl;
+            if (photo.serverUrl != null && !photo.serverUrl.isEmpty()) {
+                previewUrl = ApiClient.resolveImageUrl(photo.serverUrl);
+            }
+            Glide.with(this)
+                    .load(previewUrl)
+                    .centerCrop()
+                    .placeholder(R.drawable.ic_placeholder_general)
+                    .into(itemBinding.ivPhotoPreview);
+
+            // Remove button
+            itemBinding.btnRemovePhoto.setOnClickListener(v -> {
+                photoList.remove(index);
+                renderPhotoThumbnails();
+            });
+
+            binding.llPhotoThumbnails.addView(itemBinding.getRoot());
+        }
+    }
+
+    private boolean isAnyPhotoUploading() {
+        for (UploadedPhoto p : photoList) {
+            if (p.isUploading) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void setupObservers() {
@@ -186,11 +354,16 @@ public class CreateListingActivity extends AppCompatActivity {
         binding.tilDescription.setError(null);
         binding.tvFormError.setVisibility(View.GONE);
 
+        if (isAnyPhotoUploading()) {
+            Toast.makeText(this, "Please wait for photos to finish uploading", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         String title = binding.etTitle.getText() != null ? binding.etTitle.getText().toString().trim() : "";
         String category = binding.actvCategory.getText() != null ? binding.actvCategory.getText().toString().trim() : "";
         String condition = binding.actvCondition.getText() != null ? binding.actvCondition.getText().toString().trim() : "";
         String desc = binding.etDescription.getText() != null ? binding.etDescription.getText().toString().trim() : "";
-        String photoUrl = binding.etPhotoUrl.getText() != null ? binding.etPhotoUrl.getText().toString().trim() : "";
+        String manualPhotoUrl = binding.etPhotoUrl.getText() != null ? binding.etPhotoUrl.getText().toString().trim() : "";
 
         boolean cancel = false;
 
@@ -236,21 +409,29 @@ public class CreateListingActivity extends AppCompatActivity {
         String formattedCategory = category.toUpperCase().replace(" ", "_");
         String formattedCondition = condition.toUpperCase().replace(" ", "_");
 
+        List<String> photos = new ArrayList<>();
+        for (UploadedPhoto p : photoList) {
+            if (p.serverUrl != null && !p.serverUrl.isEmpty()) {
+                photos.add(p.serverUrl);
+            } else if (p.localUriOrUrl != null && (p.localUriOrUrl.startsWith("http://") || p.localUriOrUrl.startsWith("https://") || p.localUriOrUrl.startsWith("/uploads/"))) {
+                photos.add(p.localUriOrUrl);
+            }
+        }
+        if (photos.isEmpty() && !TextUtils.isEmpty(manualPhotoUrl)) {
+            photos.add(manualPhotoUrl);
+        }
+
         if (editListingItem != null) {
             EditListingRequest editReq = new EditListingRequest(
                     title,
                     desc,
                     formattedCategory,
                     price,
-                    formattedCondition
+                    formattedCondition,
+                    photos
             );
             viewModel.editListing(editListingItem.getId(), editReq);
             return;
-        }
-
-        List<String> photos = new ArrayList<>();
-        if (!TextUtils.isEmpty(photoUrl)) {
-            photos.add(photoUrl);
         }
 
         String itemType = isDonation ? "DONATE" : "SELL";

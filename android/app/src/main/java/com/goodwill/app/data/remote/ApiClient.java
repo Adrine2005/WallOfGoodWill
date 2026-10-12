@@ -26,6 +26,24 @@ public class ApiClient {
                 || "google_sdk".equals(android.os.Build.PRODUCT);
     }
 
+    public static String getBaseUrl() {
+        return baseUrl;
+    }
+
+    public static String resolveImageUrl(String photoUrl) {
+        if (photoUrl == null || photoUrl.trim().isEmpty()) {
+            return photoUrl;
+        }
+        if (photoUrl.startsWith("http://") || photoUrl.startsWith("https://")) {
+            return photoUrl;
+        }
+        String base = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
+        if (!photoUrl.startsWith("/")) {
+            photoUrl = "/" + photoUrl;
+        }
+        return base + photoUrl;
+    }
+
     public static void setBaseUrl(String url) {
         if (!url.endsWith("/")) {
             url += "/";

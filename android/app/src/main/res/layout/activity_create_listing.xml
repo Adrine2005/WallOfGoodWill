@@ -162,15 +162,111 @@
 
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Image URL / Attachment -->
+            <!-- OLX / Marketplace Photo Upload Section -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginTop="20dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Item Photos (Up to 5)"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_primary" />
+
+                    <TextView
+                        android:id="@+id/tvPhotoCount"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0 / 5"
+                        android:textSize="12sp"
+                        android:textColor="@color/text_secondary" />
+
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="First photo will be your cover image. Pick clear photos from phone gallery."
+                    android:textSize="11sp"
+                    android:textColor="@color/text_secondary" />
+
+                <!-- Photos Horizontal Strip -->
+                <HorizontalScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:scrollbars="none">
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <!-- Add Photos Card Button -->
+                        <LinearLayout
+                            android:id="@+id/btnAddPhotoCard"
+                            android:layout_width="92dp"
+                            android:layout_height="92dp"
+                            android:background="@drawable/bg_photo_add_card"
+                            android:gravity="center"
+                            android:orientation="vertical"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:padding="6dp">
+
+                            <ImageView
+                                android:layout_width="28dp"
+                                android:layout_height="28dp"
+                                android:src="@drawable/ic_add_photo"
+                                android:contentDescription="Add Photo" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:text="Add Photo"
+                                android:textSize="11sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/primary" />
+
+                        </LinearLayout>
+
+                        <!-- Dynamic Uploaded Photo Thumbnails Container -->
+                        <LinearLayout
+                            android:id="@+id/llPhotoThumbnails"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="10dp"
+                            android:orientation="horizontal" />
+
+                    </LinearLayout>
+
+                </HorizontalScrollView>
+
+            </LinearLayout>
+
+            <!-- Image URL / Attachment (Optional web link fallback) -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/tilPhotoUrl"
                 style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:hint="Photo URL (Optional web image link)"
-                app:helperText="Leave empty to use category illustration"
+                android:hint="Or enter Photo URL manually (Optional)"
+                app:helperText="Leave empty to use uploaded photos or category art"
                 app:helperTextEnabled="true">
 
                 <com.google.android.material.textfield.TextInputEditText
@@ -187,7 +283,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
-                android:text="⚡ Quick Campus Photo Presets (Tap to Pre-fill):"
+                android:text="⚡ Quick Campus Photo Presets (Tap to Add):"
                 android:textSize="12sp"
                 android:textColor="@color/text_secondary" />
 

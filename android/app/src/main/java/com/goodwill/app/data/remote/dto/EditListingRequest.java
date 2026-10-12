@@ -1,6 +1,7 @@
 package com.goodwill.app.data.remote.dto;
 
 import com.google.gson.annotations.SerializedName;
+import java.util.List;
 
 public class EditListingRequest {
 
@@ -19,15 +20,23 @@ public class EditListingRequest {
     @SerializedName("condition")
     private String condition;
 
+    @SerializedName("photos")
+    private List<String> photos;
+
     public EditListingRequest() {
     }
 
     public EditListingRequest(String title, String description, String category, double price, String condition) {
+        this(title, description, category, price, condition, null);
+    }
+
+    public EditListingRequest(String title, String description, String category, double price, String condition, List<String> photos) {
         this.title = title;
         this.description = description;
         this.category = category;
         this.price = price;
         this.condition = condition;
+        this.photos = photos;
     }
 
     public String getTitle() { return title; }
@@ -44,4 +53,7 @@ public class EditListingRequest {
 
     public String getCondition() { return condition; }
     public void setCondition(String condition) { this.condition = condition; }
+
+    public List<String> getPhotos() { return photos; }
+    public void setPhotos(List<String> photos) { this.photos = photos; }
 }

@@ -212,6 +212,7 @@ type UpdateListingRequest struct {
 	Category    listings.ItemCategory  `json:"category"`
 	Price       float64                `json:"price"`
 	Condition   listings.ItemCondition `json:"condition"`
+	Photos      []string               `json:"photos,omitempty"`
 }
 
 func (h *ListingsHandler) UpdateListing(w http.ResponseWriter, r *http.Request) {
@@ -234,6 +235,7 @@ func (h *ListingsHandler) UpdateListing(w http.ResponseWriter, r *http.Request) 
 		Category:    req.Category,
 		Price:       req.Price,
 		Condition:   req.Condition,
+		Photos:      req.Photos,
 	}
 
 	updated, err := h.listings.UpdateListing(id, claims.UID, params)

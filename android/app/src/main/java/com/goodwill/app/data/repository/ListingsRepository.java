@@ -8,13 +8,18 @@ import com.goodwill.app.data.remote.ApiService;
 import com.goodwill.app.data.remote.dto.CreateListingRequest;
 import com.goodwill.app.data.remote.dto.EditListingRequest;
 import com.goodwill.app.data.remote.dto.ListingDto;
+import com.goodwill.app.data.remote.dto.UploadResponseDto;
 import com.goodwill.app.data.remote.dto.UpdateStatusRequest;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
+import java.io.File;
 import java.util.List;
 import java.util.Map;
 
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -85,6 +90,26 @@ public class ListingsRepository {
             @Override
             public void onFailure(Call<ListingDto> call, Throwable t) {
                 callback.onError(t.getMessage() != null ? t.getMessage() : "Network error");
+            }
+        });
+    }
+
+    public void uploadImage(File file, RepositoryCallback<UploadResponseDto> callback) {
+        RequestBody reqFile = RequestBody.create(MediaType.parse("image/*"), file);
+        MultipartBody.Part body = MultipartBody.Part.createFormData("file", file.getName(), reqFile);
+        apiService.uploadImage(body).enqueue(new Callback<UploadResponseDto>() {
+            @Override
+            public void onResponse(Call<UploadResponseDto> call, Response<UploadResponseDto> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    callback.onSuccess(response.body());
+                } else {
+                    callback.onError(extractErrorMessage(response));
+                }
+            }
+
+            @Override
+            public void onFailure(Call<UploadResponseDto> call, Throwable t) {
+                callback.onError(t.getMessage() != null ? t.getMessage() : "Failed to upload image");
             }
         });
     }

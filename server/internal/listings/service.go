@@ -392,6 +392,7 @@ type UpdateListingParams struct {
 	Category    ItemCategory
 	Price       float64
 	Condition   ItemCondition
+	Photos      []string
 }
 
 func (s *Service) UpdateListing(id string, sellerID string, params UpdateListingParams) (*Listing, error) {
@@ -421,6 +422,9 @@ func (s *Service) UpdateListing(id string, sellerID string, params UpdateListing
 	}
 	if item.Type == TypeSell && params.Price > 0 {
 		item.Price = params.Price
+	}
+	if params.Photos != nil {
+		item.Photos = params.Photos
 	}
 
 	item.UpdatedAt = time.Now().UTC()

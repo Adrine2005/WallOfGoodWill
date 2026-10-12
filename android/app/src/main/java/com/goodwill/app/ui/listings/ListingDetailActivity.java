@@ -9,6 +9,7 @@ import androidx.core.content.ContextCompat;
 
 import com.bumptech.glide.Glide;
 import com.goodwill.app.R;
+import com.goodwill.app.data.remote.ApiClient;
 import com.goodwill.app.data.remote.dto.ListingDto;
 import com.goodwill.app.databinding.ActivityListingDetailBinding;
 
@@ -131,8 +132,9 @@ public class ListingDetailActivity extends AppCompatActivity {
         // Photo loading with category fallback
         int placeholderRes = CategoryPlaceholderHelper.getPlaceholderForCategory(item.getCategory());
         if (item.getPhotos() != null && !item.getPhotos().isEmpty() && item.getPhotos().get(0) != null) {
+            String resolvedPhoto = ApiClient.resolveImageUrl(item.getPhotos().get(0));
             Glide.with(this)
-                    .load(item.getPhotos().get(0))
+                    .load(resolvedPhoto)
                     .centerCrop()
                     .placeholder(placeholderRes)
                     .error(placeholderRes)

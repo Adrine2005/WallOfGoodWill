@@ -17,6 +17,9 @@ google-services.json
 
 # Go
 server/bin/
+server/api
+server/uploads/*
+!server/uploads/.gitkeep
 bin/
 *.exe
 *.test

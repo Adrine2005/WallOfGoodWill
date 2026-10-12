@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"path/filepath"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -31,6 +32,16 @@ func SetupRouter(userService *users.Service, inviteService *invites.Service, lis
 	r.Use(middleware.Recoverer)
 
 	r.Get("/health", handlers.Health)
+
+	uploadDir := filepath.Join(".", "uploads")
+	uploadHandler := handlers.NewUploadHandler(uploadDir)
+
+	fileServer := http.FileServer(http.Dir(uploadDir))
+	r.Handle("/uploads/*", http.StripPrefix("/uploads/", fileServer))
+
+	r.Route("/v1/upload", func(r chi.Router) {
+		r.Post("/", uploadHandler.UploadFile)
+	})
 
 	authHandler := handlers.NewAuthHandler(userService, inviteService, verifier)
 	adminHandler := handlers.NewAdminHandler(inviteService)

@@ -10,9 +10,11 @@ import androidx.lifecycle.MutableLiveData;
 import com.goodwill.app.data.remote.dto.CreateListingRequest;
 import com.goodwill.app.data.remote.dto.EditListingRequest;
 import com.goodwill.app.data.remote.dto.ListingDto;
+import com.goodwill.app.data.remote.dto.UploadResponseDto;
 import com.goodwill.app.data.repository.ListingsRepository;
 import com.goodwill.app.data.repository.RepositoryCallback;
 
+import java.io.File;
 import java.util.Collections;
 import java.util.List;
 
@@ -160,5 +162,9 @@ public class ListingsViewModel extends AndroidViewModel {
                 errorMessage.setValue(message);
             }
         });
+    }
+
+    public void uploadImage(File file, RepositoryCallback<UploadResponseDto> callback) {
+        repository.uploadImage(file, callback);
     }
 }

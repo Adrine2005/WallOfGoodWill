@@ -21,22 +21,30 @@ import com.goodwill.app.data.remote.dto.VerifyQrRequest;
 import com.goodwill.app.data.remote.dto.LeaderboardEntryDto;
 import com.goodwill.app.data.remote.dto.ReportDto;
 import com.goodwill.app.data.remote.dto.ReportListingRequest;
+import com.goodwill.app.data.remote.dto.UploadResponseDto;
 import com.goodwill.app.data.remote.dto.UserPointsDto;
 import com.goodwill.app.data.remote.dto.WishlistItemDto;
 
 import java.util.List;
 import java.util.Map;
+import okhttp3.MultipartBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.DELETE;
 import retrofit2.http.GET;
+import retrofit2.http.Multipart;
 import retrofit2.http.PATCH;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
+import retrofit2.http.Part;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 
 public interface ApiService {
+
+    @Multipart
+    @POST("v1/upload")
+    Call<UploadResponseDto> uploadImage(@Part MultipartBody.Part file);
 
     @POST("v1/auth/register")
     Call<AuthResponse> register(@Body RegisterRequest request);
