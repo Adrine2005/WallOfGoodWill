@@ -94,3 +94,4 @@ public class InviteDto implements Serializable {
         isActive = active;
     }
 }
+

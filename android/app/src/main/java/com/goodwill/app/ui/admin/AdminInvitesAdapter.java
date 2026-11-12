@@ -107,3 +107,4 @@ public class AdminInvitesAdapter extends ListAdapter<InviteDto, AdminInvitesAdap
         }
     }
 }
+

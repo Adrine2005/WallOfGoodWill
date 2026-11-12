@@ -45,3 +45,4 @@ public class GenerateQrRequest {
         this.maxUses = maxUses;
     }
 }
+

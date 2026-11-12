@@ -173,3 +173,4 @@ public class AdminQrActivity extends AppCompatActivity {
         dialog.show();
     }
 }
+
