@@ -174,3 +174,4 @@ public class WishlistFragment extends Fragment {
         binding = null;
     }
 }
+
