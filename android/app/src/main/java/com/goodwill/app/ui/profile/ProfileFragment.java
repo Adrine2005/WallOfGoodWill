@@ -23,6 +23,7 @@ import com.goodwill.app.ui.listings.ListingDetailActivity;
 import com.goodwill.app.ui.points.LeaderboardActivity;
 import com.goodwill.app.ui.points.PointsViewModel;
 import com.goodwill.app.ui.requests.DonationRequestsActivity;
+import com.goodwill.app.ui.theme.ThemeManager;
 import com.goodwill.app.ui.wishlist.WishlistActivity;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
@@ -33,6 +34,7 @@ public class ProfileFragment extends Fragment {
     private ProfileViewModel viewModel;
     private PointsViewModel pointsViewModel;
     private MyListingsAdapter adapter;
+    private ThemeManager themeManager;
 
     @Nullable
     @Override
@@ -47,6 +49,7 @@ public class ProfileFragment extends Fragment {
 
         viewModel = new ViewModelProvider(requireActivity()).get(ProfileViewModel.class);
         pointsViewModel = new ViewModelProvider(requireActivity()).get(PointsViewModel.class);
+        themeManager = new ThemeManager(requireContext());
 
         setupRecyclerView();
         setupListeners();
@@ -59,6 +62,7 @@ public class ProfileFragment extends Fragment {
         viewModel.loadProfile();
         viewModel.loadMyListings();
         pointsViewModel.loadMyPoints();
+        updateThemeDisplay();
     }
 
     private void setupRecyclerView() {
@@ -147,6 +151,10 @@ public class ProfileFragment extends Fragment {
             Intent intent = new Intent(requireContext(), AdminQrActivity.class);
             startActivity(intent);
         });
+
+        View.OnClickListener themeClickListener = v -> showThemeSelectionDialog();
+        binding.btnSelectTheme.setOnClickListener(themeClickListener);
+        binding.cardThemeSettings.setOnClickListener(themeClickListener);
 
         binding.btnSignOut.setOnClickListener(v -> {
             if (getContext() == null) return;
@@ -268,6 +276,56 @@ public class ProfileFragment extends Fragment {
 
         boolean isAdmin = user != null && "admin".equalsIgnoreCase(user.getRole());
         binding.cardAdminConsole.setVisibility(isAdmin ? View.VISIBLE : View.GONE);
+    }
+
+    private void updateThemeDisplay() {
+        if (binding == null || themeManager == null) return;
+        String mode = themeManager.getThemeMode();
+        String label;
+        if (ThemeManager.MODE_LIGHT.equalsIgnoreCase(mode)) {
+            label = "Current: White (Light Mode)";
+        } else if (ThemeManager.MODE_DARK.equalsIgnoreCase(mode)) {
+            label = "Current: Black (Dark Mode)";
+        } else {
+            label = "Current: System Default (Auto)";
+        }
+        binding.tvCurrentThemeLabel.setText(label);
+    }
+
+    private void showThemeSelectionDialog() {
+        if (getContext() == null || themeManager == null) return;
+
+        String[] options = new String[]{
+                "⚙ System Default (Auto)",
+                "☀ White (Light Mode)",
+                "🌙 Black (Dark Mode)"
+        };
+
+        String currentMode = themeManager.getThemeMode();
+        int checkedItem = 0;
+        if (ThemeManager.MODE_LIGHT.equalsIgnoreCase(currentMode)) {
+            checkedItem = 1;
+        } else if (ThemeManager.MODE_DARK.equalsIgnoreCase(currentMode)) {
+            checkedItem = 2;
+        }
+
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle("Select Appearance Theme")
+                .setSingleChoiceItems(options, checkedItem, (dialog, which) -> {
+                    String selectedMode;
+                    if (which == 1) {
+                        selectedMode = ThemeManager.MODE_LIGHT;
+                    } else if (which == 2) {
+                        selectedMode = ThemeManager.MODE_DARK;
+                    } else {
+                        selectedMode = ThemeManager.MODE_SYSTEM;
+                    }
+                    themeManager.setThemeMode(selectedMode);
+                    updateThemeDisplay();
+                    dialog.dismiss();
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
     }
 
     @Override

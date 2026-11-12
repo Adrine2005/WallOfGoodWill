@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Warm Terracotta & Honey (Dark / Night Theme) -->
+    <color name="primary">#FB923C</color>
+    <color name="primary_variant">#EA580C</color>
+    <color name="primary_container">#7C2D12</color>
+    <color name="on_primary_container">#FFEDD5</color>
+    <color name="secondary">#34D399</color>
+    <color name="secondary_container">#064E3B</color>
+    <color name="accent_karma">#FBBF24</color>
+    <color name="success">#22C55E</color>
+    <color name="success_container">#14532D</color>
+    <color name="error">#EF4444</color>
+    <color name="error_container">#7F1D1D</color>
+    <color name="warning">#FBBF24</color>
+    <color name="warning_container">#78350F</color>
+    <color name="background">#120E0C</color>
+    <color name="surface">#1E1714</color>
+    <color name="surface_variant">#2C221D</color>
+    <color name="text_primary">#F5F5F4</color>
+    <color name="text_secondary">#A8A29E</color>
+    <color name="outline">#44362E</color>
+</resources>
+
