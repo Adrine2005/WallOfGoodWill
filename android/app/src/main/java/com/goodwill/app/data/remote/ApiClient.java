@@ -16,14 +16,29 @@ public class ApiClient {
     private static String baseUrl = DEFAULT_BASE_URL;
 
     public static boolean isEmulator() {
-        return android.os.Build.FINGERPRINT.startsWith("generic")
-                || android.os.Build.FINGERPRINT.startsWith("unknown")
-                || android.os.Build.MODEL.contains("google_sdk")
-                || android.os.Build.MODEL.contains("Emulator")
-                || android.os.Build.MODEL.contains("Android SDK built for x86")
+        String fp = android.os.Build.FINGERPRINT != null ? android.os.Build.FINGERPRINT.toLowerCase() : "";
+        String model = android.os.Build.MODEL != null ? android.os.Build.MODEL.toLowerCase() : "";
+        String hardware = android.os.Build.HARDWARE != null ? android.os.Build.HARDWARE.toLowerCase() : "";
+        String product = android.os.Build.PRODUCT != null ? android.os.Build.PRODUCT.toLowerCase() : "";
+        String brand = android.os.Build.BRAND != null ? android.os.Build.BRAND.toLowerCase() : "";
+        String device = android.os.Build.DEVICE != null ? android.os.Build.DEVICE.toLowerCase() : "";
+        String board = android.os.Build.BOARD != null ? android.os.Build.BOARD.toLowerCase() : "";
+
+        return fp.startsWith("generic")
+                || fp.startsWith("unknown")
+                || fp.contains("sdk_gphone")
+                || model.contains("google_sdk")
+                || model.contains("emulator")
+                || model.contains("sdk_gphone")
+                || model.contains("android sdk built")
                 || android.os.Build.MANUFACTURER.contains("Genymotion")
-                || (android.os.Build.BRAND.startsWith("generic") && android.os.Build.DEVICE.startsWith("generic"))
-                || "google_sdk".equals(android.os.Build.PRODUCT);
+                || hardware.contains("goldfish")
+                || hardware.contains("ranchu")
+                || board.contains("goldfish")
+                || product.contains("sdk_gphone")
+                || product.contains("emu64")
+                || product.contains("google_sdk")
+                || (brand.startsWith("generic") && device.startsWith("generic"));
     }
 
     public static String getBaseUrl() {
