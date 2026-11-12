@@ -5,11 +5,11 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginStart="12dp"
-    android:layout_marginEnd="12dp"
-    android:layout_marginTop="6dp"
-    android:layout_marginBottom="6dp"
-    app:cardCornerRadius="16dp"
+    android:layout_marginStart="6dp"
+    android:layout_marginEnd="6dp"
+    android:layout_marginTop="4dp"
+    android:layout_marginBottom="8dp"
+    app:cardCornerRadius="14dp"
     app:cardElevation="2dp"
     app:cardBackgroundColor="@color/surface"
     app:strokeColor="@color/outline"
@@ -25,12 +25,16 @@
         <!-- Image Container with Overlaid Badges -->
         <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="160dp">
+            android:layout_height="wrap_content"
+            android:minHeight="120dp">
 
             <ImageView
                 android:id="@+id/ivListingImage"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="120dp"
+                android:maxHeight="190dp"
+                android:adjustViewBounds="true"
                 android:scaleType="centerCrop"
                 android:background="@color/surface_variant"
                 android:contentDescription="Listing Photo"
@@ -42,16 +46,16 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="top|start"
-                android:layout_margin="12dp"
-                android:paddingStart="10dp"
-                android:paddingEnd="10dp"
-                android:paddingTop="4dp"
-                android:paddingBottom="4dp"
+                android:layout_margin="8dp"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:paddingTop="3dp"
+                android:paddingBottom="3dp"
                 android:background="@drawable/bg_badge_donate"
                 android:textColor="@color/surface"
-                android:textSize="12sp"
+                android:textSize="11sp"
                 android:textStyle="bold"
-                tools:text="DONATE • Free" />
+                tools:text="DONATE" />
 
             <!-- Condition Chip -->
             <TextView
@@ -59,82 +63,83 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="top|end"
-                android:layout_margin="12dp"
-                android:paddingStart="8dp"
-                android:paddingEnd="8dp"
-                android:paddingTop="4dp"
-                android:paddingBottom="4dp"
+                android:layout_margin="8dp"
+                android:paddingStart="6dp"
+                android:paddingEnd="6dp"
+                android:paddingTop="3dp"
+                android:paddingBottom="3dp"
                 android:background="@drawable/bg_chip_condition"
                 android:textColor="@color/text_primary"
-                android:textSize="11sp"
+                android:textSize="10sp"
                 android:textStyle="bold"
                 tools:text="LIKE NEW" />
 
         </FrameLayout>
 
-        <!-- Listing Content -->
+        <!-- Compact Listing Content -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="10dp">
 
             <TextView
                 android:id="@+id/tvTitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textSize="16sp"
+                android:textSize="14sp"
                 android:textStyle="bold"
                 android:textColor="@color/text_primary"
                 android:maxLines="2"
                 android:ellipsize="end"
-                tools:text="Engineering Mathematics (Vol 1 &amp; 2)" />
+                tools:text="Engineering Mathematics Vol 1" />
 
             <TextView
                 android:id="@+id/tvDescription"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:textSize="13sp"
+                android:layout_marginTop="3dp"
+                android:textSize="12sp"
                 android:textColor="@color/text_secondary"
                 android:maxLines="2"
                 android:ellipsize="end"
-                tools:text="Standard semester textbooks in great condition. Donating for free since I have completed the course." />
+                tools:text="Standard semester textbooks in great condition." />
 
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
-                android:layout_marginTop="12dp"
-                android:layout_marginBottom="10dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="8dp"
                 android:background="@color/surface_variant" />
 
-            <!-- Location & Seller Info -->
+            <!-- Location & Category Tag -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
+                android:orientation="vertical">
 
                 <TextView
                     android:id="@+id/tvHostelBlock"
-                    android:layout_width="0dp"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:textSize="12sp"
+                    android:textSize="11sp"
                     android:textColor="@color/primary_variant"
                     android:textStyle="bold"
-                    tools:text="📍 Block A (Boys)" />
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    tools:text="📍 Block A" />
 
                 <TextView
                     android:id="@+id/tvCategory"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:paddingStart="8dp"
-                    android:paddingEnd="8dp"
+                    android:layout_marginTop="4dp"
+                    android:paddingStart="6dp"
+                    android:paddingEnd="6dp"
                     android:paddingTop="2dp"
                     android:paddingBottom="2dp"
                     android:background="@drawable/bg_category_tag"
-                    android:textSize="11sp"
+                    android:textSize="10sp"
                     android:textColor="@color/text_secondary"
                     tools:text="BOOKS" />
 

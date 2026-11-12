@@ -1,37 +1,51 @@
 package com.goodwill.app;
 
 import android.content.Intent;
+import android.graphics.Typeface;
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.view.View;
-import android.view.inputmethod.EditorInfo;
 
+import androidx.activity.OnBackPressedCallback;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.ViewModelProvider;
-import androidx.recyclerview.widget.LinearLayoutManager;
 
-import com.goodwill.app.data.local.SessionManager;
-import com.goodwill.app.data.remote.dto.ListingDto;
-import com.goodwill.app.data.remote.dto.UserDto;
 import com.goodwill.app.databinding.ActivityMainBinding;
-import com.goodwill.app.ui.chat.ConversationsActivity;
+import com.goodwill.app.ui.chat.ChatViewModel;
+import com.goodwill.app.ui.chat.ConversationsFragment;
 import com.goodwill.app.ui.listings.CreateListingActivity;
-import com.goodwill.app.ui.listings.ListingDetailActivity;
-import com.goodwill.app.ui.listings.ListingsAdapter;
-import com.goodwill.app.ui.listings.ListingsViewModel;
-import com.goodwill.app.ui.notifications.NotificationsActivity;
+import com.goodwill.app.ui.listings.FeedFragment;
 import com.goodwill.app.ui.notifications.NotificationsViewModel;
-import com.goodwill.app.ui.profile.ProfileActivity;
-import com.goodwill.app.ui.wishlist.WishlistActivity;
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.goodwill.app.ui.profile.ProfileFragment;
+import com.goodwill.app.ui.wishlist.WishlistFragment;
 
 public class MainActivity extends AppCompatActivity {
 
+    public static final int TAB_EXPLORE = 0;
+    public static final int TAB_WISHLIST = 1;
+    public static final int TAB_CHATS = 2;
+    public static final int TAB_PROFILE = 3;
+
+    private static final String TAG_FEED = "tag_feed";
+    private static final String TAG_WISHLIST = "tag_wishlist";
+    private static final String TAG_CHATS = "tag_chats";
+    private static final String TAG_PROFILE = "tag_profile";
+    private static final String KEY_CURRENT_TAB = "key_current_tab";
+
     private ActivityMainBinding binding;
-    private ListingsViewModel viewModel;
     private NotificationsViewModel notifViewModel;
-    private ListingsAdapter adapter;
+    private ChatViewModel chatViewModel;
+
+    private FeedFragment feedFragment;
+    private WishlistFragment wishlistFragment;
+    private ConversationsFragment conversationsFragment;
+    private ProfileFragment profileFragment;
+    private Fragment activeFragment;
+
+    private int currentTabIndex = TAB_EXPLORE;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,185 +53,164 @@ public class MainActivity extends AppCompatActivity {
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        viewModel = new ViewModelProvider(this).get(ListingsViewModel.class);
         notifViewModel = new ViewModelProvider(this).get(NotificationsViewModel.class);
+        chatViewModel = new ViewModelProvider(this).get(ChatViewModel.class);
 
-        displayUserGreeting();
-        setupRecyclerView();
-        setupFilterChips();
-        setupSearch();
-        setupFab();
-        setupProfileButton();
-        setupNotificationsButton();
-        setupObservers();
+        setupFragments(savedInstanceState);
+        setupBottomDock();
+        setupBackNavigation();
+        setupBadgeObservers();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        viewModel.loadFeed();
         notifViewModel.loadUnreadCount();
+        chatViewModel.loadConversations();
     }
 
-    private void setupNotificationsButton() {
-        binding.btnNotifications.setOnClickListener(v -> {
-            Intent intent = new Intent(MainActivity.this, NotificationsActivity.class);
-            startActivity(intent);
-        });
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt(KEY_CURRENT_TAB, currentTabIndex);
+    }
 
-        binding.btnMessages.setOnClickListener(v -> {
-            Intent intent = new Intent(MainActivity.this, ConversationsActivity.class);
-            startActivity(intent);
-        });
+    private void setupFragments(Bundle savedInstanceState) {
+        FragmentManager fm = getSupportFragmentManager();
 
-        binding.btnWishlist.setOnClickListener(v -> {
-            Intent intent = new Intent(MainActivity.this, WishlistActivity.class);
-            startActivity(intent);
-        });
+        if (savedInstanceState == null) {
+            feedFragment = new FeedFragment();
+            wishlistFragment = new WishlistFragment();
+            conversationsFragment = new ConversationsFragment();
+            profileFragment = new ProfileFragment();
 
-        notifViewModel.getUnreadCount().observe(this, count -> {
-            if (count != null && count > 0) {
-                binding.tvNotificationBadge.setVisibility(View.VISIBLE);
-                binding.tvNotificationBadge.setText(count > 99 ? "99+" : String.valueOf(count));
-            } else {
-                binding.tvNotificationBadge.setVisibility(View.GONE);
+            fm.beginTransaction()
+                    .add(R.id.nav_host_fragment_container, feedFragment, TAG_FEED)
+                    .add(R.id.nav_host_fragment_container, wishlistFragment, TAG_WISHLIST)
+                    .add(R.id.nav_host_fragment_container, conversationsFragment, TAG_CHATS)
+                    .add(R.id.nav_host_fragment_container, profileFragment, TAG_PROFILE)
+                    .hide(wishlistFragment)
+                    .hide(conversationsFragment)
+                    .hide(profileFragment)
+                    .show(feedFragment)
+                    .commit();
+
+            activeFragment = feedFragment;
+            currentTabIndex = TAB_EXPLORE;
+        } else {
+            feedFragment = (FeedFragment) fm.findFragmentByTag(TAG_FEED);
+            wishlistFragment = (WishlistFragment) fm.findFragmentByTag(TAG_WISHLIST);
+            conversationsFragment = (ConversationsFragment) fm.findFragmentByTag(TAG_CHATS);
+            profileFragment = (ProfileFragment) fm.findFragmentByTag(TAG_PROFILE);
+
+            currentTabIndex = savedInstanceState.getInt(KEY_CURRENT_TAB, TAB_EXPLORE);
+            switch (currentTabIndex) {
+                case TAB_WISHLIST:
+                    activeFragment = wishlistFragment;
+                    break;
+                case TAB_CHATS:
+                    activeFragment = conversationsFragment;
+                    break;
+                case TAB_PROFILE:
+                    activeFragment = profileFragment;
+                    break;
+                case TAB_EXPLORE:
+                default:
+                    activeFragment = feedFragment;
+                    break;
             }
-        });
+        }
+
+        updateDockUi(currentTabIndex);
     }
 
-    private void displayUserGreeting() {
-        SessionManager sessionManager = new SessionManager(this);
-        UserDto user = sessionManager.getUser();
-        if (user != null && user.getName() != null && !user.getName().isEmpty()) {
-            binding.tvWelcomeStudent.setText(String.format("Hello, %s • %s",
-                    user.getName().split(" ")[0],
-                    user.getHostelBlock() != null ? user.getHostelBlock() : "Campus"));
+    private void setupBottomDock() {
+        binding.floatingDock.tabExplore.setOnClickListener(v -> switchTab(TAB_EXPLORE));
+        binding.floatingDock.tabWishlist.setOnClickListener(v -> switchTab(TAB_WISHLIST));
+        binding.floatingDock.tabPost.setOnClickListener(v -> {
+            startActivity(new Intent(MainActivity.this, CreateListingActivity.class));
+        });
+        binding.floatingDock.tabChats.setOnClickListener(v -> switchTab(TAB_CHATS));
+        binding.floatingDock.tabProfile.setOnClickListener(v -> switchTab(TAB_PROFILE));
+    }
+
+    public void switchTab(int tabIndex) {
+        if (tabIndex == currentTabIndex && activeFragment != null && activeFragment.isAdded()) {
+            return;
+        }
+
+        Fragment target;
+        switch (tabIndex) {
+            case TAB_WISHLIST:
+                target = wishlistFragment;
+                break;
+            case TAB_CHATS:
+                target = conversationsFragment;
+                break;
+            case TAB_PROFILE:
+                target = profileFragment;
+                break;
+            case TAB_EXPLORE:
+            default:
+                target = feedFragment;
+                break;
+        }
+
+        if (target != null && target.isAdded()) {
+            getSupportFragmentManager().beginTransaction()
+                    .hide(activeFragment)
+                    .show(target)
+                    .commit();
+            activeFragment = target;
+            currentTabIndex = tabIndex;
+            updateDockUi(tabIndex);
         }
     }
 
-    private void setupRecyclerView() {
-        adapter = new ListingsAdapter(listing -> {
-            Intent intent = new Intent(MainActivity.this, ListingDetailActivity.class);
-            intent.putExtra("extra_listing", listing);
-            startActivity(intent);
-        });
+    private void updateDockUi(int activeTab) {
+        int activeColor = ContextCompat.getColor(this, R.color.primary);
+        int inactiveColor = ContextCompat.getColor(this, R.color.text_secondary);
 
-        binding.rvListings.setLayoutManager(new LinearLayoutManager(this));
-        binding.rvListings.setAdapter(adapter);
+        // Explore
+        binding.floatingDock.tvTabExplore.setTextColor(activeTab == TAB_EXPLORE ? activeColor : inactiveColor);
+        binding.floatingDock.tvTabExplore.setTypeface(null, activeTab == TAB_EXPLORE ? Typeface.BOLD : Typeface.NORMAL);
+
+        // Wishlist
+        binding.floatingDock.tvTabWishlist.setTextColor(activeTab == TAB_WISHLIST ? activeColor : inactiveColor);
+        binding.floatingDock.tvTabWishlist.setTypeface(null, activeTab == TAB_WISHLIST ? Typeface.BOLD : Typeface.NORMAL);
+
+        // Chats
+        binding.floatingDock.tvTabChats.setTextColor(activeTab == TAB_CHATS ? activeColor : inactiveColor);
+        binding.floatingDock.tvTabChats.setTypeface(null, activeTab == TAB_CHATS ? Typeface.BOLD : Typeface.NORMAL);
+
+        // Profile
+        binding.floatingDock.tvTabProfile.setTextColor(activeTab == TAB_PROFILE ? activeColor : inactiveColor);
+        binding.floatingDock.tvTabProfile.setTypeface(null, activeTab == TAB_PROFILE ? Typeface.BOLD : Typeface.NORMAL);
     }
 
-    private void setupObservers() {
-        viewModel.getListings().observe(this, list -> {
-            adapter.submitList(list);
-            if (list == null || list.isEmpty()) {
-                binding.layoutEmpty.setVisibility(View.VISIBLE);
-                binding.rvListings.setVisibility(View.GONE);
+    private void setupBackNavigation() {
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                if (currentTabIndex != TAB_EXPLORE) {
+                    switchTab(TAB_EXPLORE);
+                } else {
+                    setEnabled(false);
+                    getOnBackPressedDispatcher().onBackPressed();
+                }
+            }
+        });
+    }
+
+    private void setupBadgeObservers() {
+        chatViewModel.getConversations().observe(this, conversations -> {
+            if (conversations != null && !conversations.isEmpty()) {
+                int count = conversations.size();
+                binding.floatingDock.tvChatBadge.setVisibility(View.VISIBLE);
+                binding.floatingDock.tvChatBadge.setText(count > 9 ? "9+" : String.valueOf(count));
             } else {
-                binding.layoutEmpty.setVisibility(View.GONE);
-                binding.rvListings.setVisibility(View.VISIBLE);
+                binding.floatingDock.tvChatBadge.setVisibility(View.GONE);
             }
-        });
-
-        viewModel.getIsLoading().observe(this, loading -> {
-            binding.progressFeed.setVisibility(loading ? View.VISIBLE : View.GONE);
-        });
-    }
-
-    private void setupFilterChips() {
-        binding.chipGroupFilters.setOnCheckedStateChangeListener((group, checkedIds) -> {
-            if (checkedIds.isEmpty()) {
-                viewModel.setCategory(null);
-                viewModel.setType(null);
-                return;
-            }
-
-            int checkedId = checkedIds.get(0);
-            if (checkedId == R.id.chipAll) {
-                viewModel.setCategory(null);
-                viewModel.setType(null);
-            } else if (checkedId == R.id.chipDonate) {
-                viewModel.setCategory(null);
-                viewModel.setType("DONATE");
-            } else if (checkedId == R.id.chipSell) {
-                viewModel.setCategory(null);
-                viewModel.setType("SELL");
-            } else if (checkedId == R.id.chipBooks) {
-                viewModel.setType(null);
-                viewModel.setCategory("BOOKS");
-            } else if (checkedId == R.id.chipElectronics) {
-                viewModel.setType(null);
-                viewModel.setCategory("ELECTRONICS");
-            } else if (checkedId == R.id.chipCycles) {
-                viewModel.setType(null);
-                viewModel.setCategory("CYCLES");
-            } else if (checkedId == R.id.chipKitchenware) {
-                viewModel.setType(null);
-                viewModel.setCategory("KITCHENWARE");
-            } else if (checkedId == R.id.chipFurniture) {
-                viewModel.setType(null);
-                viewModel.setCategory("FURNITURE");
-            }
-        });
-
-        binding.chipHostelFilter.setOnClickListener(v -> {
-            String[] hostelOptions = new String[] {
-                    "All Hostels",
-                    "Hostel Block A (Boys)",
-                    "Hostel Block B (Boys)",
-                    "Hostel Block C (Girls)",
-                    "Hostel Block D (Girls)",
-                    "Day Scholar / Off-Campus"
-            };
-
-            new MaterialAlertDialogBuilder(MainActivity.this)
-                    .setTitle("Filter by Campus Location")
-                    .setItems(hostelOptions, (dialog, which) -> {
-                        if (which == 0) {
-                            binding.chipHostelFilter.setText("📍 Hostels: All");
-                            viewModel.setHostelBlock(null);
-                        } else {
-                            String choice = hostelOptions[which];
-                            binding.chipHostelFilter.setText("📍 " + choice.replace("Hostel ", ""));
-                            viewModel.setHostelBlock(choice);
-                        }
-                    })
-                    .show();
-        });
-    }
-
-    private void setupSearch() {
-        binding.etSearch.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                viewModel.setSearchQuery(s != null ? s.toString().trim() : null);
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {}
-        });
-
-        binding.etSearch.setOnEditorActionListener((v, actionId, event) -> {
-            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-                String q = binding.etSearch.getText() != null ? binding.etSearch.getText().toString().trim() : "";
-                viewModel.setSearchQuery(q);
-                return true;
-            }
-            return false;
-        });
-    }
-
-    private void setupFab() {
-        binding.fabPostListing.setOnClickListener(v -> {
-            startActivity(new Intent(MainActivity.this, CreateListingActivity.class));
-        });
-    }
-
-    private void setupProfileButton() {
-        binding.btnProfile.setOnClickListener(v -> {
-            startActivity(new Intent(MainActivity.this, ProfileActivity.class));
         });
     }
 }
