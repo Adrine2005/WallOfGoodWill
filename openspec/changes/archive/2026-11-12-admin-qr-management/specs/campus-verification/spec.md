@@ -16,3 +16,4 @@ The Android client application SHALL provide administrative users with a dedicat
 #### Scenario: Non-admin users restricted from admin panel
 - **WHEN** an authenticated student without admin privileges views their profile
 - **THEN** the client hides the administration console entry and restricts access to administrative tools
+

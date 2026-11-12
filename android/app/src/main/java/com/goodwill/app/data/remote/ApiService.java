@@ -9,6 +9,8 @@ import com.goodwill.app.data.remote.dto.CreateListingRequest;
 import com.goodwill.app.data.remote.dto.CreateWishlistRequest;
 import com.goodwill.app.data.remote.dto.DonationRequestDto;
 import com.goodwill.app.data.remote.dto.EditListingRequest;
+import com.goodwill.app.data.remote.dto.GenerateQrRequest;
+import com.goodwill.app.data.remote.dto.InviteDto;
 import com.goodwill.app.data.remote.dto.ListingDto;
 import com.goodwill.app.data.remote.dto.LoginRequest;
 import com.goodwill.app.data.remote.dto.NotificationDto;
@@ -60,6 +62,13 @@ public interface ApiService {
 
     @GET("health")
     Call<Map<String, Object>> getHealth();
+
+    // Admin endpoints
+    @POST("v1/admin/qr/generate")
+    Call<InviteDto> generateInvite(@Body GenerateQrRequest request);
+
+    @GET("v1/admin/qr/list")
+    Call<List<InviteDto>> listInvites();
 
     // Listings endpoints
     @GET("v1/listings")

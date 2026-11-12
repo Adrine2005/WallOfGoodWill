@@ -112,3 +112,4 @@ SCANNABLE QR POPUP DIALOG
 
 - **[Risk: Camera scan failure in dim hostel environments]** → *Mitigation*: The scannable dialog renders high-contrast black-on-white pixels and prominently displays the plain text code so students can enter it manually in `VerifyQrActivity`.
 - **[Risk: Unauthorized student access]** → *Mitigation*: The backend requires admin authentication, and the client UI suppresses all administrative access buttons for student roles.
+

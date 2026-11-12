@@ -49,6 +49,7 @@ dependencies {
     implementation(libs.play.services.code.scanner)
     implementation(libs.glide)
     implementation(libs.swiperefreshlayout)
+    implementation(libs.zxing.core)
 
     testImplementation(libs.junit)
     testImplementation(libs.mockito.core)

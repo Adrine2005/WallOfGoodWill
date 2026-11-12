@@ -26,3 +26,4 @@ None.
 - **UI Layouts**: Adds `activity_admin_qr.xml`, `item_admin_invite.xml`, `dialog_generate_qr.xml`, `dialog_view_qr.xml`; updates `fragment_profile.xml` with admin management card.
 - **Java Code**: Adds `AdminQrActivity.java`, `AdminViewModel.java`, `AdminRepository.java`, `QrCodeGenerator.java`, and DTOs (`InviteDto`, `GenerateQrRequest`). Updates `ApiService.java` and `ProfileFragment.java`.
 - **Dependencies**: Adds `com.google.zxing:core:3.5.3` for zero-dependency local QR code bitmap encoding.
+

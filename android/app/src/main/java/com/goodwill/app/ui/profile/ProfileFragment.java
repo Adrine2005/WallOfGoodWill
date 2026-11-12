@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import com.goodwill.app.data.remote.dto.ListingDto;
 import com.goodwill.app.data.remote.dto.UserDto;
 import com.goodwill.app.databinding.FragmentProfileBinding;
+import com.goodwill.app.ui.admin.AdminQrActivity;
 import com.goodwill.app.ui.auth.LoginActivity;
 import com.goodwill.app.ui.chat.ConversationsActivity;
 import com.goodwill.app.ui.listings.CreateListingActivity;
@@ -142,6 +143,11 @@ public class ProfileFragment extends Fragment {
             startActivity(intent);
         });
 
+        binding.btnManageAdminQr.setOnClickListener(v -> {
+            Intent intent = new Intent(requireContext(), AdminQrActivity.class);
+            startActivity(intent);
+        });
+
         binding.btnSignOut.setOnClickListener(v -> {
             if (getContext() == null) return;
             new MaterialAlertDialogBuilder(requireContext())
@@ -259,6 +265,9 @@ public class ProfileFragment extends Fragment {
             binding.tvVerifiedStatus.setText("⚠ PENDING PHYSICAL QR VERIFICATION");
             binding.tvVerifiedStatus.setVisibility(View.VISIBLE);
         }
+
+        boolean isAdmin = user != null && "admin".equalsIgnoreCase(user.getRole());
+        binding.cardAdminConsole.setVisibility(isAdmin ? View.VISIBLE : View.GONE);
     }
 
     @Override
