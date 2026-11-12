@@ -35,8 +35,12 @@ public class ListingsViewModel extends AndroidViewModel {
     private String currentSearch = null;
 
     public ListingsViewModel(@NonNull Application application) {
+        this(application, new ListingsRepository(application));
+    }
+
+    public ListingsViewModel(@NonNull Application application, ListingsRepository repository) {
         super(application);
-        this.repository = new ListingsRepository(application);
+        this.repository = repository;
     }
 
     public LiveData<List<ListingDto>> getListings() {

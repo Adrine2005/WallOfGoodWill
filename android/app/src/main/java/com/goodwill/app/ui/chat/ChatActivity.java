@@ -51,24 +51,27 @@ public class ChatActivity extends AppCompatActivity {
 
         viewModel = new ViewModelProvider(this).get(ChatViewModel.class);
 
-        conversationId = getIntent().getStringExtra(EXTRA_CONVERSATION_ID);
-        listingId = getIntent().getStringExtra(EXTRA_LISTING_ID);
-        listingTitle = getIntent().getStringExtra(EXTRA_LISTING_TITLE);
-        partyName = getIntent().getStringExtra(EXTRA_PARTY_NAME);
+        if (getIntent() != null) {
+            conversationId = getIntent().getStringExtra(EXTRA_CONVERSATION_ID);
+            listingId = getIntent().getStringExtra(EXTRA_LISTING_ID);
+            listingTitle = getIntent().getStringExtra(EXTRA_LISTING_TITLE);
+            partyName = getIntent().getStringExtra(EXTRA_PARTY_NAME);
+        }
 
         setupToolbar();
         setupRecyclerView();
         setupListeners();
         setupObservers();
 
-        if (conversationId != null && !conversationId.isEmpty()) {
-            viewModel.loadConversationDetail(conversationId);
-            viewModel.loadMessages(conversationId);
-        } else if (listingId != null && !listingId.isEmpty()) {
-            viewModel.openOrCreateConversation(listingId);
+        if (conversationId != null && !conversationId.trim().isEmpty()) {
+            viewModel.loadConversationDetail(conversationId.trim());
+            viewModel.loadMessages(conversationId.trim());
+        } else if (listingId != null && !listingId.trim().isEmpty()) {
+            viewModel.openOrCreateConversation(listingId.trim());
         } else {
             Toast.makeText(this, "Unable to load chat", Toast.LENGTH_SHORT).show();
             finish();
+            return;
         }
     }
 

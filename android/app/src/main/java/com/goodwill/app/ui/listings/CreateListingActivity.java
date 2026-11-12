@@ -31,11 +31,15 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class CreateListingActivity extends AppCompatActivity {
 
     public static final String EXTRA_EDIT_LISTING = "extra_edit_listing";
     public static final int MAX_PHOTOS = 5;
+
+    private final ExecutorService ioExecutor = Executors.newSingleThreadExecutor();
 
     private static class UploadedPhoto {
         String localUriOrUrl;
@@ -93,7 +97,11 @@ public class CreateListingActivity extends AppCompatActivity {
 
     private void initEditModeIfPresent() {
         if (getIntent() != null && getIntent().hasExtra(EXTRA_EDIT_LISTING)) {
-            editListingItem = (ListingDto) getIntent().getSerializableExtra(EXTRA_EDIT_LISTING);
+            try {
+                editListingItem = (ListingDto) getIntent().getSerializableExtra(EXTRA_EDIT_LISTING);
+            } catch (Exception e) {
+                editListingItem = null;
+            }
             if (editListingItem != null) {
                 binding.toolbar.setTitle("Edit Listing");
                 binding.btnSubmitPost.setText("Save Changes");
@@ -217,33 +225,41 @@ public class CreateListingActivity extends AppCompatActivity {
         photoList.add(photo);
         renderPhotoThumbnails();
 
-        File tempFile = copyUriToTempFile(uri);
-        if (tempFile == null) {
-            photo.isUploading = false;
-            photo.isError = true;
-            renderPhotoThumbnails();
-            Toast.makeText(this, "Failed to read selected image", Toast.LENGTH_SHORT).show();
-            return;
-        }
+        ioExecutor.execute(() -> {
+            File tempFile = copyUriToTempFile(uri);
+            runOnUiThread(() -> {
+                if (isFinishing() || isDestroyed()) {
+                    if (tempFile != null) tempFile.delete();
+                    return;
+                }
 
-        viewModel.uploadImage(tempFile, new RepositoryCallback<UploadResponseDto>() {
-            @Override
-            public void onSuccess(UploadResponseDto result) {
-                photo.isUploading = false;
-                photo.serverUrl = result.getUrl();
-                renderPhotoThumbnails();
-                // Clean up temp file
-                tempFile.delete();
-            }
+                if (tempFile == null) {
+                    photo.isUploading = false;
+                    photo.isError = true;
+                    renderPhotoThumbnails();
+                    Toast.makeText(CreateListingActivity.this, "Failed to read selected image", Toast.LENGTH_SHORT).show();
+                    return;
+                }
 
-            @Override
-            public void onError(String message) {
-                photo.isUploading = false;
-                photo.isError = true;
-                renderPhotoThumbnails();
-                tempFile.delete();
-                Toast.makeText(CreateListingActivity.this, "Upload failed: " + message, Toast.LENGTH_SHORT).show();
-            }
+                viewModel.uploadImage(tempFile, new RepositoryCallback<UploadResponseDto>() {
+                    @Override
+                    public void onSuccess(UploadResponseDto result) {
+                        photo.isUploading = false;
+                        photo.serverUrl = result.getUrl();
+                        renderPhotoThumbnails();
+                        tempFile.delete();
+                    }
+
+                    @Override
+                    public void onError(String message) {
+                        photo.isUploading = false;
+                        photo.isError = true;
+                        renderPhotoThumbnails();
+                        tempFile.delete();
+                        Toast.makeText(CreateListingActivity.this, "Upload failed: " + message, Toast.LENGTH_SHORT).show();
+                    }
+                });
+            });
         });
     }
 
@@ -447,5 +463,11 @@ public class CreateListingActivity extends AppCompatActivity {
         );
 
         viewModel.createListing(req);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        ioExecutor.shutdown();
     }
 }

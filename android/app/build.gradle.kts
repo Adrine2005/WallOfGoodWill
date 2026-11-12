@@ -51,6 +51,8 @@ dependencies {
     implementation(libs.swiperefreshlayout)
 
     testImplementation(libs.junit)
+    testImplementation(libs.mockito.core)
+    testImplementation(libs.androidx.core.testing)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
 }

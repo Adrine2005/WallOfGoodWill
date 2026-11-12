@@ -31,8 +31,16 @@ public class ListingDetailActivity extends AppCompatActivity {
         sessionManager = new SessionManager(this);
         setupToolbar();
 
-        ListingDto item = (ListingDto) getIntent().getSerializableExtra("extra_listing");
-        if (item != null) {
+        ListingDto item = null;
+        if (getIntent() != null && getIntent().hasExtra("extra_listing")) {
+            try {
+                item = (ListingDto) getIntent().getSerializableExtra("extra_listing");
+            } catch (Exception e) {
+                item = null;
+            }
+        }
+
+        if (item != null && item.getId() != null) {
             displayDetails(item);
         } else {
             Toast.makeText(this, "Listing details unavailable", Toast.LENGTH_SHORT).show();

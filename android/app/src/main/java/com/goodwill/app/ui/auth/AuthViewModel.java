@@ -25,9 +25,15 @@ public class AuthViewModel extends AndroidViewModel {
     private final MutableLiveData<Boolean> isVerified = new MutableLiveData<>(false);
 
     public AuthViewModel(@NonNull Application application) {
+        this(application, new AuthRepository(application));
+    }
+
+    public AuthViewModel(@NonNull Application application, AuthRepository authRepository) {
         super(application);
-        this.authRepository = new AuthRepository(application);
-        this.isVerified.setValue(authRepository.isVerified());
+        this.authRepository = authRepository;
+        if (authRepository != null) {
+            this.isVerified.setValue(authRepository.isVerified());
+        }
     }
 
     public LiveData<Boolean> getIsLoading() {
