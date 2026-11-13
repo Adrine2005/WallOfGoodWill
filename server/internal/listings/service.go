@@ -1,6 +1,7 @@
 package listings
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
@@ -9,6 +10,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"goodwill-server/internal/db"
 )
 
 var (
@@ -85,6 +88,11 @@ type Filter struct {
 type Service struct {
 	mu       sync.RWMutex
 	listings map[string]*Listing
+	db       *db.DB
+}
+
+func (s *Service) SetDB(database *db.DB) {
+	s.db = database
 }
 
 func generateID() string {
@@ -262,6 +270,32 @@ func (s *Service) CreateListing(sellerID, sellerName, hostelBlock, roomNo, title
 	}
 
 	s.listings[listing.ID] = listing
+
+	if s.db != nil && s.db.Pool != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		_, _ = s.db.Pool.Exec(ctx, `
+			INSERT INTO listings (id, seller_id, seller_name, hostel_block, room_no, title, description, category, type, price, condition, status, created_at, updated_at)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+			ON CONFLICT (id) DO UPDATE SET
+				title = EXCLUDED.title,
+				description = EXCLUDED.description,
+				category = EXCLUDED.category,
+				type = EXCLUDED.type,
+				price = EXCLUDED.price,
+				condition = EXCLUDED.condition,
+				status = EXCLUDED.status,
+				updated_at = EXCLUDED.updated_at
+		`, listing.ID, listing.SellerID, listing.SellerName, listing.HostelBlock, listing.RoomNo, listing.Title, listing.Description, listing.Category, listing.Type, listing.Price, listing.Condition, listing.Status, listing.CreatedAt, listing.UpdatedAt)
+
+		for i, photo := range listing.Photos {
+			_, _ = s.db.Pool.Exec(ctx, `
+				INSERT INTO listing_photos (listing_id, photo_url, display_order)
+				VALUES ($1, $2, $3)
+			`, listing.ID, photo, i)
+		}
+	}
+
 	return listing, nil
 }
 
@@ -351,6 +385,13 @@ func (s *Service) DeleteListing(id string, sellerID string) error {
 
 	item.Status = StatusDeleted
 	item.UpdatedAt = time.Now().UTC()
+
+	if s.db != nil && s.db.Pool != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		_, _ = s.db.Pool.Exec(ctx, `UPDATE listings SET status = 'DELETED', updated_at = $1 WHERE id = $2`, item.UpdatedAt, item.ID)
+	}
+
 	return nil
 }
 
@@ -369,6 +410,13 @@ func (s *Service) UpdateStatus(id string, sellerID string, status ListingStatus)
 
 	item.Status = status
 	item.UpdatedAt = time.Now().UTC()
+
+	if s.db != nil && s.db.Pool != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		_, _ = s.db.Pool.Exec(ctx, `UPDATE listings SET status = $1, updated_at = $2 WHERE id = $3`, string(item.Status), item.UpdatedAt, item.ID)
+	}
+
 	return nil
 }
 
@@ -383,6 +431,13 @@ func (s *Service) SetSystemStatus(id string, status ListingStatus) error {
 
 	item.Status = status
 	item.UpdatedAt = time.Now().UTC()
+
+	if s.db != nil && s.db.Pool != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		_, _ = s.db.Pool.Exec(ctx, `UPDATE listings SET status = $1, updated_at = $2 WHERE id = $3`, string(item.Status), item.UpdatedAt, item.ID)
+	}
+
 	return nil
 }
 

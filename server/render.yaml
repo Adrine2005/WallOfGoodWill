@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: goodwill-server
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: free
+    region: oregon
+    healthCheckPath: /health
+    envVars:
+      - key: PORT
+        value: 8080
+      - key: ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false # Set in Render Dashboard from your Supabase Connection String
+      - key: SUPABASE_URL
+        sync: false # e.g. https://<project-ref>.supabase.co
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false # Service role secret key from Supabase Dashboard -> Project Settings -> API
+      - key: SUPABASE_STORAGE_BUCKET
+        value: goodwill-images

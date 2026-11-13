@@ -1,10 +1,12 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
 	"path/filepath"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -12,6 +14,7 @@ import (
 	"goodwill-server/internal/auth"
 	"goodwill-server/internal/chat"
 	"goodwill-server/internal/config"
+	"goodwill-server/internal/db"
 	"goodwill-server/internal/handlers"
 	"goodwill-server/internal/invites"
 	"goodwill-server/internal/listings"
@@ -19,11 +22,12 @@ import (
 	"goodwill-server/internal/notifications"
 	"goodwill-server/internal/points"
 	"goodwill-server/internal/requests"
+	"goodwill-server/internal/storage"
 	"goodwill-server/internal/users"
 	"goodwill-server/internal/wishlist"
 )
 
-func SetupRouter(userService *users.Service, inviteService *invites.Service, listingsService *listings.Service, requestsService *requests.Service, notifService *notifications.Service, chatService *chat.Service, wishlistService *wishlist.Service, pointsService *points.Service, moderationService *moderation.Service, verifier auth.TokenVerifier) *chi.Mux {
+func SetupRouter(userService *users.Service, inviteService *invites.Service, listingsService *listings.Service, requestsService *requests.Service, notifService *notifications.Service, chatService *chat.Service, wishlistService *wishlist.Service, pointsService *points.Service, moderationService *moderation.Service, verifier auth.TokenVerifier, supabaseStorage ...*storage.SupabaseStorage) *chi.Mux {
 	r := chi.NewRouter()
 
 	r.Use(middleware.RequestID)
@@ -34,7 +38,11 @@ func SetupRouter(userService *users.Service, inviteService *invites.Service, lis
 	r.Get("/health", handlers.Health)
 
 	uploadDir := filepath.Join(".", "uploads")
-	uploadHandler := handlers.NewUploadHandler(uploadDir)
+	var sClient *storage.SupabaseStorage
+	if len(supabaseStorage) > 0 {
+		sClient = supabaseStorage[0]
+	}
+	uploadHandler := handlers.NewUploadHandler(uploadDir, sClient)
 
 	fileServer := http.FileServer(http.Dir(uploadDir))
 	r.Handle("/uploads/*", http.StripPrefix("/uploads/", fileServer))
@@ -132,10 +140,39 @@ func SetupRouter(userService *users.Service, inviteService *invites.Service, lis
 func main() {
 	cfg := config.Load()
 
+	var database *db.DB
+	if cfg.DatabaseURL != "" {
+		log.Println("Initializing PostgreSQL database connection...")
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		var err error
+		database, err = db.Connect(ctx, cfg.DatabaseURL)
+		if err != nil {
+			log.Printf("⚠️ Warning: Failed to connect to PostgreSQL database: %v. Falling back to in-memory mode.", err)
+		} else {
+			defer database.Close()
+			migrationPath := filepath.Join("migrations", "001_initial_schema.sql")
+			if err := database.RunMigrations(context.Background(), migrationPath); err != nil {
+				log.Printf("⚠️ Warning: Failed to run database migrations: %v", err)
+			}
+		}
+	} else {
+		log.Println("No DATABASE_URL configured. Running in in-memory mode.")
+	}
+
 	userService := users.NewService()
+	if database != nil {
+		userService.SetDB(database)
+	}
 	inviteService := invites.NewService()
 	inviteService.SeedDefaultInvites()
+	if database != nil {
+		inviteService.SetDB(database)
+	}
 	listingsService := listings.NewService()
+	if database != nil {
+		listingsService.SetDB(database)
+	}
 	notifService := notifications.NewService()
 	requestsService := requests.NewService(listingsService, userService, notifService)
 	chatService := chat.NewService(listingsService, userService, notifService)
@@ -145,7 +182,15 @@ func main() {
 	requestsService.SetPointsService(pointsService)
 	verifier := auth.NewMockVerifier()
 
-	r := SetupRouter(userService, inviteService, listingsService, requestsService, notifService, chatService, wishlistService, pointsService, moderationService, verifier)
+	var supabaseStorage *storage.SupabaseStorage
+	if cfg.SupabaseURL != "" && cfg.SupabaseKey != "" {
+		supabaseStorage = storage.NewSupabaseStorage(cfg.SupabaseURL, cfg.SupabaseKey, cfg.SupabaseBucket)
+		log.Println("✓ Supabase Cloud Storage enabled for photo uploads")
+	} else {
+		log.Println("Supabase Storage credentials omitted. Using local disk upload storage.")
+	}
+
+	r := SetupRouter(userService, inviteService, listingsService, requestsService, notifService, chatService, wishlistService, pointsService, moderationService, verifier, supabaseStorage)
 
 	addr := fmt.Sprintf(":%s", cfg.Port)
 	log.Printf("Wall of Goodwill server starting on port %s in %s mode\n", cfg.Port, cfg.Env)

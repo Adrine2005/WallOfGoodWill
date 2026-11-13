@@ -1,6 +1,7 @@
 package invites
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
@@ -8,6 +9,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"goodwill-server/internal/db"
 )
 
 var (
@@ -30,12 +33,17 @@ type Invite struct {
 type Service struct {
 	mu      sync.RWMutex
 	invites map[string]*Invite
+	db      *db.DB
 }
 
 func NewService() *Service {
 	return &Service{
 		invites: make(map[string]*Invite),
 	}
+}
+
+func (s *Service) SetDB(database *db.DB) {
+	s.db = database
 }
 
 func (s *Service) SeedDefaultInvites() {
@@ -63,7 +71,6 @@ func (s *Service) SeedDefaultInvites() {
 	}
 }
 
-// GenerateCode creates a random unique campus code like "GW-A9B4C2"
 func generateCode() (string, error) {
 	bytes := make([]byte, 4)
 	if _, err := rand.Read(bytes); err != nil {
@@ -73,9 +80,6 @@ func generateCode() (string, error) {
 }
 
 func (s *Service) CreateInvite(label string, duration time.Duration, maxUses int) (*Invite, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
 	code, err := generateCode()
 	if err != nil {
 		return nil, err
@@ -92,30 +96,59 @@ func (s *Service) CreateInvite(label string, duration time.Duration, maxUses int
 		IsActive:  true,
 	}
 
+	s.mu.Lock()
 	s.invites[code] = invite
+	s.mu.Unlock()
+
+	if s.db != nil && s.db.Pool != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		_, _ = s.db.Pool.Exec(ctx, `
+			INSERT INTO campus_invites (code, label, expires_at, max_uses, used_count, is_active, created_at)
+			VALUES ($1, $2, $3, $4, $5, $6, $7)
+			ON CONFLICT (code) DO NOTHING
+		`, invite.Code, invite.Label, invite.ExpiresAt, invite.MaxUses, invite.UsedCount, invite.IsActive, invite.CreatedAt)
+	}
+
 	return invite, nil
 }
 
 func (s *Service) GetInvite(code string) (*Invite, error) {
+	cleanCode := strings.TrimSpace(code)
 	s.mu.RLock()
-	defer s.mu.RUnlock()
-
-	invite, exists := s.invites[strings.TrimSpace(code)]
-	if !exists {
-		return nil, ErrInviteNotFound
+	invite, exists := s.invites[cleanCode]
+	s.mu.RUnlock()
+	if exists {
+		return invite, nil
 	}
-	return invite, nil
+
+	if s.db != nil && s.db.Pool != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		var inv Invite
+		err := s.db.Pool.QueryRow(ctx, `
+			SELECT code, label, expires_at, max_uses, used_count, is_active, created_at
+			FROM campus_invites WHERE code = $1
+		`, cleanCode).Scan(&inv.Code, &inv.Label, &inv.ExpiresAt, &inv.MaxUses, &inv.UsedCount, &inv.IsActive, &inv.CreatedAt)
+		if err == nil {
+			s.mu.Lock()
+			s.invites[inv.Code] = &inv
+			s.mu.Unlock()
+			return &inv, nil
+		}
+	}
+
+	return nil, ErrInviteNotFound
 }
 
 func (s *Service) ValidateAndUseInvite(code string) (*Invite, error) {
+	invite, err := s.GetInvite(code)
+	if err != nil {
+		return nil, err
+	}
+
 	s.mu.Lock()
 	defer s.mu.Unlock()
-
-	cleanCode := strings.TrimSpace(code)
-	invite, exists := s.invites[cleanCode]
-	if !exists {
-		return nil, ErrInviteNotFound
-	}
 
 	if !invite.IsActive {
 		return nil, ErrInviteInactive
@@ -130,10 +163,44 @@ func (s *Service) ValidateAndUseInvite(code string) (*Invite, error) {
 	}
 
 	invite.UsedCount++
+
+	if s.db != nil && s.db.Pool != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		_, _ = s.db.Pool.Exec(ctx, `
+			UPDATE campus_invites SET used_count = used_count + 1 WHERE code = $1
+		`, invite.Code)
+	}
+
 	return invite, nil
 }
 
 func (s *Service) ListInvites() []*Invite {
+	if s.db != nil && s.db.Pool != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		rows, err := s.db.Pool.Query(ctx, `
+			SELECT code, label, expires_at, max_uses, used_count, is_active, created_at
+			FROM campus_invites ORDER BY created_at DESC
+		`)
+		if err == nil {
+			defer rows.Close()
+			var list []*Invite
+			for rows.Next() {
+				var inv Invite
+				if err := rows.Scan(&inv.Code, &inv.Label, &inv.ExpiresAt, &inv.MaxUses, &inv.UsedCount, &inv.IsActive, &inv.CreatedAt); err == nil {
+					list = append(list, &inv)
+					s.mu.Lock()
+					s.invites[inv.Code] = &inv
+					s.mu.Unlock()
+				}
+			}
+			if len(list) > 0 {
+				return list
+			}
+		}
+	}
+
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 

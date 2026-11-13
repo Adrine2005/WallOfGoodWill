@@ -1,10 +1,13 @@
 package users
 
 import (
+	"context"
 	"errors"
 	"strings"
 	"sync"
 	"time"
+
+	"goodwill-server/internal/db"
 )
 
 var (
@@ -29,6 +32,7 @@ type User struct {
 type Service struct {
 	mu    sync.RWMutex
 	users map[string]*User
+	db    *db.DB
 }
 
 func NewService() *Service {
@@ -37,6 +41,10 @@ func NewService() *Service {
 	}
 	s.seedDefaultUsers()
 	return s
+}
+
+func (s *Service) SetDB(database *db.DB) {
+	s.db = database
 }
 
 func (s *Service) seedDefaultUsers() {
@@ -100,28 +108,81 @@ func (s *Service) SaveUser(u *User) {
 		u.CreatedAt = u.UpdatedAt
 	}
 	s.users[u.UID] = u
+
+	if s.db != nil && s.db.Pool != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		_, _ = s.db.Pool.Exec(ctx, `
+			INSERT INTO users (id, name, email, password_hash, role, hostel_block, room_no, phone, verified, verified_via_code, created_at)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+			ON CONFLICT (id) DO UPDATE SET
+				name = EXCLUDED.name,
+				email = EXCLUDED.email,
+				password_hash = EXCLUDED.password_hash,
+				role = EXCLUDED.role,
+				hostel_block = EXCLUDED.hostel_block,
+				room_no = EXCLUDED.room_no,
+				phone = EXCLUDED.phone,
+				verified = EXCLUDED.verified,
+				verified_via_code = EXCLUDED.verified_via_code
+		`, u.UID, u.Name, u.Email, u.Password, u.Role, u.HostelBlock, u.RoomNo, u.Phone, u.Verified, u.VerifiedViaCode, u.CreatedAt)
+	}
 }
 
 func (s *Service) GetUser(uid string) (*User, error) {
+	cleanUID := strings.TrimSpace(uid)
 	s.mu.RLock()
-	defer s.mu.RUnlock()
-
-	user, exists := s.users[strings.TrimSpace(uid)]
-	if !exists {
-		return nil, ErrUserNotFound
+	user, exists := s.users[cleanUID]
+	s.mu.RUnlock()
+	if exists {
+		return user, nil
 	}
-	return user, nil
+
+	if s.db != nil && s.db.Pool != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		var u User
+		err := s.db.Pool.QueryRow(ctx, `
+			SELECT id, name, email, password_hash, role, hostel_block, room_no, phone, verified, verified_via_code, created_at
+			FROM users WHERE id = $1
+		`, cleanUID).Scan(&u.UID, &u.Name, &u.Email, &u.Password, &u.Role, &u.HostelBlock, &u.RoomNo, &u.Phone, &u.Verified, &u.VerifiedViaCode, &u.CreatedAt)
+		if err == nil {
+			s.mu.Lock()
+			s.users[u.UID] = &u
+			s.mu.Unlock()
+			return &u, nil
+		}
+	}
+
+	return nil, ErrUserNotFound
 }
 
 func (s *Service) GetUserByEmail(email string) (*User, error) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-
 	cleanEmail := strings.ToLower(strings.TrimSpace(email))
+	s.mu.RLock()
 	for _, u := range s.users {
 		if strings.ToLower(u.Email) == cleanEmail {
+			s.mu.RUnlock()
 			return u, nil
 		}
 	}
+	s.mu.RUnlock()
+
+	if s.db != nil && s.db.Pool != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		var u User
+		err := s.db.Pool.QueryRow(ctx, `
+			SELECT id, name, email, password_hash, role, hostel_block, room_no, phone, verified, verified_via_code, created_at
+			FROM users WHERE LOWER(email) = $1
+		`, cleanEmail).Scan(&u.UID, &u.Name, &u.Email, &u.Password, &u.Role, &u.HostelBlock, &u.RoomNo, &u.Phone, &u.Verified, &u.VerifiedViaCode, &u.CreatedAt)
+		if err == nil {
+			s.mu.Lock()
+			s.users[u.UID] = &u
+			s.mu.Unlock()
+			return &u, nil
+		}
+	}
+
 	return nil, ErrUserNotFound
 }

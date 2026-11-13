@@ -5,24 +5,37 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
+	"log"
 	"mime"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"goodwill-server/internal/storage"
 )
 
 type UploadHandler struct {
 	uploadDir string
+	supabase  *storage.SupabaseStorage
 }
 
-func NewUploadHandler(uploadDir string) *UploadHandler {
+func NewUploadHandler(uploadDir string, supabase ...*storage.SupabaseStorage) *UploadHandler {
 	if uploadDir == "" {
 		uploadDir = filepath.Join(".", "uploads")
 	}
 	_ = os.MkdirAll(uploadDir, 0755)
-	return &UploadHandler{uploadDir: uploadDir}
+
+	var sClient *storage.SupabaseStorage
+	if len(supabase) > 0 {
+		sClient = supabase[0]
+	}
+
+	return &UploadHandler{
+		uploadDir: uploadDir,
+		supabase:  sClient,
+	}
 }
 
 type UploadResponse struct {
@@ -57,25 +70,22 @@ func (h *UploadHandler) UploadFile(w http.ResponseWriter, r *http.Request) {
 				continue
 			}
 
-			// Read first 512 bytes for MIME detection
-			buff := make([]byte, 512)
-			n, readErr := file.Read(buff)
-			if readErr != nil && readErr != io.EOF {
-				file.Close()
+			// Read file content
+			fileBytes, readErr := io.ReadAll(file)
+			file.Close()
+			if readErr != nil {
 				continue
 			}
 
-			contentType := http.DetectContentType(buff[:n])
+			if len(fileBytes) == 0 {
+				continue
+			}
+
+			// Detect MIME type
+			contentType := http.DetectContentType(fileBytes)
 			if !strings.HasPrefix(contentType, "image/") {
-				file.Close()
 				writeError(w, http.StatusBadRequest, "only image files (JPEG, PNG, WEBP, GIF) are allowed")
 				return
-			}
-
-			// Reset file read pointer
-			if _, seekErr := file.Seek(0, io.SeekStart); seekErr != nil {
-				file.Close()
-				continue
 			}
 
 			ext := filepath.Ext(fileHeader.Filename)
@@ -91,27 +101,30 @@ func (h *UploadHandler) UploadFile(w http.ResponseWriter, r *http.Request) {
 			b := make([]byte, 8)
 			_, _ = rand.Read(b)
 			generatedName := fmt.Sprintf("img_%d_%s%s", time.Now().Unix(), hex.EncodeToString(b), strings.ToLower(ext))
-			destPath := filepath.Join(h.uploadDir, generatedName)
 
-			destFile, err := os.Create(destPath)
-			if err != nil {
-				file.Close()
-				writeError(w, http.StatusInternalServerError, "failed to save uploaded file")
-				return
+			var targetURL string
+
+			// 1. Attempt Supabase Cloud Storage if configured
+			if h.supabase != nil && h.supabase.IsConfigured() {
+				cloudURL, uploadErr := h.supabase.Upload(r.Context(), generatedName, contentType, fileBytes)
+				if uploadErr == nil {
+					targetURL = cloudURL
+				} else {
+					log.Printf("⚠️ Supabase Storage upload failed: %v. Falling back to local disk.", uploadErr)
+				}
 			}
 
-			_, copyErr := io.Copy(destFile, file)
-			destFile.Close()
-			file.Close()
-
-			if copyErr != nil {
-				_ = os.Remove(destPath)
-				writeError(w, http.StatusInternalServerError, "failed to write file content")
-				return
+			// 2. Fall back to local disk storage if cloud upload wasn't used or failed
+			if targetURL == "" {
+				destPath := filepath.Join(h.uploadDir, generatedName)
+				if writeErr := os.WriteFile(destPath, fileBytes, 0644); writeErr != nil {
+					writeError(w, http.StatusInternalServerError, "failed to save uploaded file locally")
+					return
+				}
+				targetURL = fmt.Sprintf("/uploads/%s", generatedName)
 			}
 
-			relURL := fmt.Sprintf("/uploads/%s", generatedName)
-			savedURLs = append(savedURLs, relURL)
+			savedURLs = append(savedURLs, targetURL)
 			if firstFilename == "" {
 				firstFilename = generatedName
 			}
