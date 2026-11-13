@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -151,9 +153,18 @@ func main() {
 			log.Printf("⚠️ Warning: Failed to connect to PostgreSQL database: %v. Falling back to in-memory mode.", err)
 		} else {
 			defer database.Close()
-			migrationPath := filepath.Join("migrations", "001_initial_schema.sql")
-			if err := database.RunMigrations(context.Background(), migrationPath); err != nil {
-				log.Printf("⚠️ Warning: Failed to run database migrations: %v", err)
+			entries, err := os.ReadDir("migrations")
+			if err == nil {
+				for _, entry := range entries {
+					if !entry.IsDir() && strings.HasSuffix(entry.Name(), ".sql") {
+						mPath := filepath.Join("migrations", entry.Name())
+						if err := database.RunMigrations(context.Background(), mPath); err != nil {
+							log.Printf("⚠️ Warning: Failed to run database migration %s: %v", entry.Name(), err)
+						}
+					}
+				}
+			} else {
+				log.Printf("⚠️ Warning: Could not read migrations directory: %v", err)
 			}
 		}
 	} else {

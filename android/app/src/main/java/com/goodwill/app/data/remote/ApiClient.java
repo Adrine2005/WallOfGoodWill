@@ -1,6 +1,10 @@
 package com.goodwill.app.data.remote;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
+import okhttp3.Dns;
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
@@ -76,6 +80,22 @@ public class ApiClient {
             OkHttpClient.Builder clientBuilder = new OkHttpClient.Builder()
                     .connectTimeout(15, TimeUnit.SECONDS)
                     .readTimeout(15, TimeUnit.SECONDS)
+                    .dns(new Dns() {
+                        @Override
+                        public java.util.List<InetAddress> lookup(String hostname) throws UnknownHostException {
+                            try {
+                                return Dns.SYSTEM.lookup(hostname);
+                            } catch (UnknownHostException e) {
+                                if ("wallofgoodwill.onrender.com".equalsIgnoreCase(hostname)) {
+                                    return Arrays.asList(
+                                            InetAddress.getByName("216.24.57.18"),
+                                            InetAddress.getByName("216.24.57.16")
+                                    );
+                                }
+                                throw e;
+                            }
+                        }
+                    })
                     .addInterceptor(logging);
 
             if (tokenProvider != null) {
