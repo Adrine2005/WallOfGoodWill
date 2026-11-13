@@ -43,3 +43,4 @@ func TestSupabaseStorage_UploadSuccess(t *testing.T) {
 		t.Errorf("expected public URL %s, got %s", expectedURL, url)
 	}
 }
+

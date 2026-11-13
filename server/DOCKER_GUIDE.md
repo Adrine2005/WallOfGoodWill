@@ -141,3 +141,4 @@ In [`android/app/src/main/java/com/goodwill/app/data/remote/ApiClient.java`](fil
 public static final String CLOUD_BASE_URL = "https://goodwill-server-xxxx.onrender.com/v1/";
 ```
 Now your Android app works anywhere over WiFi/cellular without needing USB port forwarding or emulator loopbacks!
+

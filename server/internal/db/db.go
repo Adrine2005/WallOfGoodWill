@@ -71,3 +71,4 @@ func (d *DB) Close() {
 		d.Pool.Close()
 	}
 }
+

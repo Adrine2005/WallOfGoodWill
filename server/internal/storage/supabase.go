@@ -76,3 +76,4 @@ func (s *SupabaseStorage) Upload(ctx context.Context, filename string, contentTy
 	publicURL := fmt.Sprintf("%s/storage/v1/object/public/%s/%s", s.BaseURL, s.Bucket, cleanFilename)
 	return publicURL, nil
 }
+

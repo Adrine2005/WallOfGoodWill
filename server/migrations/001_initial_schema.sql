@@ -177,3 +177,4 @@ VALUES
     ('GW-NOTICEBOARD-A', 'Hostel Block A Main Notice Board', NOW() + INTERVAL '365 days', 1000, 0, TRUE),
     ('GW-31D63A7C', 'Campus Main Notice Board Poster', NOW() + INTERVAL '365 days', 1000, 0, TRUE)
 ON CONFLICT (code) DO NOTHING;
+

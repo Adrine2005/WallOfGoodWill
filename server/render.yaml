@@ -20,3 +20,4 @@ services:
         sync: false # Service role secret key from Supabase Dashboard -> Project Settings -> API
       - key: SUPABASE_STORAGE_BUCKET
         value: goodwill-images
+

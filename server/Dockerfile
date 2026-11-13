@@ -43,3 +43,4 @@ RUN adduser -D -u 10001 -g '' appuser && chown -R appuser:appuser /app
 USER appuser
 
 ENTRYPOINT ["/app/server"]
+
