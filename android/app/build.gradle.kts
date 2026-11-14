@@ -48,6 +48,7 @@ dependencies {
     implementation(libs.okhttp.logging)
     implementation(libs.play.services.code.scanner)
     implementation(libs.glide)
+    implementation(libs.glide.okhttp3)
     implementation(libs.swiperefreshlayout)
     implementation(libs.zxing.core)
 

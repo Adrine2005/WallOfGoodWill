@@ -18,7 +18,55 @@ public class ApiClient {
     public static final String DEFAULT_BASE_URL = CLOUD_BASE_URL;
 
     private static ApiService apiService;
+    private static OkHttpClient sharedOkHttpClient;
     private static String baseUrl = DEFAULT_BASE_URL;
+
+    public static synchronized OkHttpClient getOkHttpClient() {
+        if (sharedOkHttpClient == null) {
+            HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
+            logging.setLevel(HttpLoggingInterceptor.Level.HEADERS);
+
+            sharedOkHttpClient = new OkHttpClient.Builder()
+                    .connectTimeout(15, TimeUnit.SECONDS)
+                    .readTimeout(15, TimeUnit.SECONDS)
+                    .dns(new Dns() {
+                        @Override
+                        public java.util.List<InetAddress> lookup(String hostname) throws UnknownHostException {
+                            try {
+                                return Dns.SYSTEM.lookup(hostname);
+                            } catch (UnknownHostException e) {
+                                if (hostname != null) {
+                                    String lower = hostname.toLowerCase();
+                                    if ("wallofgoodwill.onrender.com".equals(lower)) {
+                                        return Arrays.asList(
+                                                InetAddress.getByName("216.24.57.18"),
+                                                InetAddress.getByName("216.24.57.16")
+                                        );
+                                    }
+                                    if (lower.contains("supabase.co")) {
+                                        return Arrays.asList(
+                                                InetAddress.getByName("172.64.149.246"),
+                                                InetAddress.getByName("104.18.38.10")
+                                        );
+                                    }
+                                    if (lower.contains("unsplash.com") || lower.contains("unsplash.net")) {
+                                        return Arrays.asList(
+                                                InetAddress.getByName("151.101.210.208"),
+                                                InetAddress.getByName("151.101.2.208"),
+                                                InetAddress.getByName("151.101.66.208"),
+                                                InetAddress.getByName("151.101.130.208")
+                                        );
+                                    }
+                                }
+                                throw e;
+                            }
+                        }
+                    })
+                    .addInterceptor(logging)
+                    .build();
+        }
+        return sharedOkHttpClient;
+    }
 
     public static boolean isEmulator() {
         String fp = android.os.Build.FINGERPRINT != null ? android.os.Build.FINGERPRINT.toLowerCase() : "";
@@ -74,30 +122,7 @@ public class ApiClient {
 
     public static synchronized ApiService getApiService(AuthInterceptor.TokenProvider tokenProvider) {
         if (apiService == null) {
-            HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
-            logging.setLevel(HttpLoggingInterceptor.Level.BODY);
-
-            OkHttpClient.Builder clientBuilder = new OkHttpClient.Builder()
-                    .connectTimeout(15, TimeUnit.SECONDS)
-                    .readTimeout(15, TimeUnit.SECONDS)
-                    .dns(new Dns() {
-                        @Override
-                        public java.util.List<InetAddress> lookup(String hostname) throws UnknownHostException {
-                            try {
-                                return Dns.SYSTEM.lookup(hostname);
-                            } catch (UnknownHostException e) {
-                                if ("wallofgoodwill.onrender.com".equalsIgnoreCase(hostname)) {
-                                    return Arrays.asList(
-                                            InetAddress.getByName("216.24.57.18"),
-                                            InetAddress.getByName("216.24.57.16")
-                                    );
-                                }
-                                throw e;
-                            }
-                        }
-                    })
-                    .addInterceptor(logging);
-
+            OkHttpClient.Builder clientBuilder = getOkHttpClient().newBuilder();
             if (tokenProvider != null) {
                 clientBuilder.addInterceptor(new AuthInterceptor(tokenProvider));
             }

@@ -43,3 +43,4 @@ See proposal.md for motivation and context. The Android client uploads images to
   - **Mitigation:** Fallback IPs are only queried when system DNS throws `UnknownHostException`. If system DNS works, live DNS responses are always used first.
 - **[Risk]** Bitmap memory allocation out-of-memory (OOM) on low-end devices.
   - **Mitigation:** Use `BitmapFactory.Options.inSampleSize` to subsample during decoding from `InputStream`, avoiding allocating full 4000x3000 bitmaps in memory.
+

@@ -25,3 +25,4 @@ When users attach photos to marketplace listings, modern phone cameras produce 5
   - `GlideModule` / `GlideIntegration`: Register OkHttpUrlLoader for Glide to inherit resilient network transport.
 - **Server**:
   - `server/internal/handlers/upload.go`: Support `/v1/upload/{filename}` fallback retrieval.
+

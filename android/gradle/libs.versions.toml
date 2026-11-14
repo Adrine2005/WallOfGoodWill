@@ -34,6 +34,7 @@ okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhtt
 okhttp-logging = { group = "com.squareup.okhttp3", name = "logging-interceptor", version.ref = "okhttp" }
 play-services-code-scanner = { group = "com.google.android.gms", name = "play-services-code-scanner", version.ref = "play-services-code-scanner" }
 glide = { group = "com.github.bumptech.glide", name = "glide", version.ref = "glide" }
+glide-okhttp3 = { group = "com.github.bumptech.glide", name = "okhttp3-integration", version.ref = "glide" }
 swiperefreshlayout = { group = "androidx.swiperefreshlayout", name = "swiperefreshlayout", version.ref = "swiperefreshlayout" }
 mockito-core = { group = "org.mockito", name = "mockito-core", version.ref = "mockito" }
 androidx-core-testing = { group = "androidx.arch.core", name = "core-testing", version.ref = "core-testing" }

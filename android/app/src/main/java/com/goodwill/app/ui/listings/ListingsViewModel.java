@@ -28,6 +28,7 @@ public class ListingsViewModel extends AndroidViewModel {
     private final MutableLiveData<ListingDto> createSuccess = new MutableLiveData<>(null);
     private final MutableLiveData<ListingDto> editSuccess = new MutableLiveData<>(null);
     private final MutableLiveData<ListingDto> selectedListing = new MutableLiveData<>(null);
+    private final MutableLiveData<Boolean> deleteSuccess = new MutableLiveData<>(false);
 
     private String currentCategory = null;
     private String currentType = null;
@@ -65,6 +66,10 @@ public class ListingsViewModel extends AndroidViewModel {
 
     public LiveData<ListingDto> getSelectedListing() {
         return selectedListing;
+    }
+
+    public LiveData<Boolean> getDeleteSuccess() {
+        return deleteSuccess;
     }
 
     public void clearError() {
@@ -170,5 +175,24 @@ public class ListingsViewModel extends AndroidViewModel {
 
     public void uploadImage(File file, RepositoryCallback<UploadResponseDto> callback) {
         repository.uploadImage(file, callback);
+    }
+
+    public void deleteListing(String id) {
+        isLoading.setValue(true);
+        errorMessage.setValue(null);
+        repository.deleteListing(id, new RepositoryCallback<Boolean>() {
+            @Override
+            public void onSuccess(Boolean result) {
+                isLoading.setValue(false);
+                deleteSuccess.setValue(true);
+                loadFeed();
+            }
+
+            @Override
+            public void onError(String message) {
+                isLoading.setValue(false);
+                errorMessage.setValue(message);
+            }
+        });
     }
 }

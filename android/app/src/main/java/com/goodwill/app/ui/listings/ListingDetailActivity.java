@@ -4,8 +4,10 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.bumptech.glide.Glide;
 import com.goodwill.app.R;
@@ -21,6 +23,7 @@ public class ListingDetailActivity extends AppCompatActivity {
 
     private ActivityListingDetailBinding binding;
     private SessionManager sessionManager;
+    private ListingsViewModel viewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,7 +32,22 @@ public class ListingDetailActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
 
         sessionManager = new SessionManager(this);
+        viewModel = new ViewModelProvider(this).get(ListingsViewModel.class);
         setupToolbar();
+
+        viewModel.getDeleteSuccess().observe(this, success -> {
+            if (Boolean.TRUE.equals(success)) {
+                Toast.makeText(this, "Listing deleted successfully", Toast.LENGTH_SHORT).show();
+                setResult(RESULT_OK);
+                finish();
+            }
+        });
+
+        viewModel.getErrorMessage().observe(this, error -> {
+            if (error != null) {
+                Toast.makeText(this, "Failed to delete: " + error, Toast.LENGTH_SHORT).show();
+            }
+        });
 
         ListingDto item = null;
         if (getIntent() != null && getIntent().hasExtra("extra_listing")) {
@@ -160,6 +178,23 @@ public class ListingDetailActivity extends AppCompatActivity {
             });
         } else {
             binding.btnReportListing.setVisibility(View.GONE);
+        }
+
+        // Delete Listing Action (Owner only)
+        if (isOwner) {
+            binding.btnDeleteListing.setVisibility(View.VISIBLE);
+            binding.btnDeleteListing.setOnClickListener(v -> {
+                new AlertDialog.Builder(this)
+                        .setTitle("Delete Listing")
+                        .setMessage("Are you sure you want to permanently delete this listing?")
+                        .setPositiveButton("Delete", (dialog, which) -> {
+                            viewModel.deleteListing(item.getId());
+                        })
+                        .setNegativeButton("Cancel", null)
+                        .show();
+            });
+        } else {
+            binding.btnDeleteListing.setVisibility(View.GONE);
         }
     }
 }

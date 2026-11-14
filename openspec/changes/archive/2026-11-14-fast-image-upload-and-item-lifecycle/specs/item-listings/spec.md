@@ -30,3 +30,4 @@ The client application and backend service SHALL allow an authenticated seller t
 #### Scenario: Seller deletes listing from detail screen
 - **WHEN** the authenticated seller views their own listing and confirms deletion in the prompt dialog
 - **THEN** the client dispatches a DELETE request, the backend marks the listing as inactive, and the client navigates back to the marketplace feed with updated state
+

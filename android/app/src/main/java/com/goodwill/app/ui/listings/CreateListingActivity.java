@@ -1,5 +1,7 @@
 package com.goodwill.app.ui.listings;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -226,7 +228,7 @@ public class CreateListingActivity extends AppCompatActivity {
         renderPhotoThumbnails();
 
         ioExecutor.execute(() -> {
-            File tempFile = copyUriToTempFile(uri);
+            File tempFile = compressAndCopyUriToTempFile(uri);
             runOnUiThread(() -> {
                 if (isFinishing() || isDestroyed()) {
                     if (tempFile != null) tempFile.delete();
@@ -263,10 +265,71 @@ public class CreateListingActivity extends AppCompatActivity {
         });
     }
 
-    private File copyUriToTempFile(Uri uri) {
+    private File compressAndCopyUriToTempFile(Uri uri) {
+        try {
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inJustDecodeBounds = true;
+            try (InputStream in = getContentResolver().openInputStream(uri)) {
+                if (in == null) return null;
+                BitmapFactory.decodeStream(in, null, options);
+            }
+
+            int origWidth = options.outWidth;
+            int origHeight = options.outHeight;
+            if (origWidth <= 0 || origHeight <= 0) {
+                return copyRawUriToTempFile(uri);
+            }
+
+            final int maxDim = 1280;
+            int inSampleSize = 1;
+            while ((origWidth / inSampleSize) > maxDim * 1.5 || (origHeight / inSampleSize) > maxDim * 1.5) {
+                inSampleSize *= 2;
+            }
+
+            options.inJustDecodeBounds = false;
+            options.inSampleSize = inSampleSize;
+
+            Bitmap bitmap;
+            try (InputStream in = getContentResolver().openInputStream(uri)) {
+                if (in == null) return null;
+                bitmap = BitmapFactory.decodeStream(in, null, options);
+            }
+
+            if (bitmap == null) {
+                return copyRawUriToTempFile(uri);
+            }
+
+            int width = bitmap.getWidth();
+            int height = bitmap.getHeight();
+            if (width > maxDim || height > maxDim) {
+                float ratio = Math.min((float) maxDim / width, (float) maxDim / height);
+                int targetWidth = Math.round(width * ratio);
+                int targetHeight = Math.round(height * ratio);
+                Bitmap scaled = Bitmap.createScaledBitmap(bitmap, targetWidth, targetHeight, true);
+                if (scaled != bitmap) {
+                    bitmap.recycle();
+                    bitmap = scaled;
+                }
+            }
+
+            File tempFile = new File(getCacheDir(), "upload_opt_" + System.currentTimeMillis() + "_" + (int)(Math.random() * 1000) + ".jpg");
+            try (OutputStream out = new FileOutputStream(tempFile)) {
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 82, out);
+                out.flush();
+            } finally {
+                bitmap.recycle();
+            }
+
+            return tempFile;
+        } catch (Exception e) {
+            return copyRawUriToTempFile(uri);
+        }
+    }
+
+    private File copyRawUriToTempFile(Uri uri) {
         try (InputStream in = getContentResolver().openInputStream(uri)) {
             if (in == null) return null;
-            File tempFile = new File(getCacheDir(), "upload_" + System.currentTimeMillis() + "_" + (int)(Math.random() * 1000) + ".jpg");
+            File tempFile = new File(getCacheDir(), "upload_raw_" + System.currentTimeMillis() + "_" + (int)(Math.random() * 1000) + ".jpg");
             try (OutputStream out = new FileOutputStream(tempFile)) {
                 byte[] buffer = new byte[8192];
                 int read;
